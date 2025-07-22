@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "777515238310",
+    "firebase_url": "https://treecare-1c23a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "treecare-1c23a",
+    "storage_bucket": "treecare-1c23a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:777515238310:android:d1332fab00640203340567",
+        "android_client_info": {
+          "package_name": "com.example.tree_care"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBs97xt4TJ8IB978CuKzjFiO7VK2YBeFcs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
