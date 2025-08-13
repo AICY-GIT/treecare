@@ -114,6 +114,7 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
     );
   }
 
+  bool _isPasswordVisible = true;
   Column _newPassword() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,13 +139,24 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
               ),
             ],
           ),
-          child: const TextField(
-            obscureText: true,
+          child: TextField(
+            obscureText: _isPasswordVisible,
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               hintText: "Enter your new password",
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+              ),
             ),
           ),
         ),
@@ -152,6 +164,7 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
     );
   }
 
+  bool _isConfirmPasswordVisible = true;
   Column _confirmPassword() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,12 +189,26 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
               ),
             ],
           ),
-          child: const TextField(
+          child: TextField(
+            obscureText: _isConfirmPasswordVisible,
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               hintText: "Enter your confirm password",
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isConfirmPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
+                  color: Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                  });
+                },
+              ),
             ),
           ),
         ),

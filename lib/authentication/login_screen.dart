@@ -116,6 +116,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  bool _isPasswordVisible = true;
   Column _password() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,13 +141,24 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ],
           ),
-          child: const TextField(
-            obscureText: true,
+          child: TextField(
+            obscureText: _isPasswordVisible,
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               hintText: "Enter your password",
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+              ),
             ),
           ),
         ),

@@ -150,7 +150,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           },
           child: const Text(
             "Already have an account, sign in",
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.black),
           ),
         ),
       ],
@@ -171,7 +171,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           },
           child: const Text(
             "Don't have an account, register now",
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.black),
           ),
         ),
       ],

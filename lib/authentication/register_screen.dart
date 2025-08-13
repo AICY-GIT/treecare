@@ -9,6 +9,32 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  // Controllers
+  final TextEditingController fullNameController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+
+  // Error
+  String? usernameError;
+  String? passwordError;
+  String? confirmPasswordError;
+  String? emailError;
+
+  // Regex
+  final RegExp usernameReg = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
+  // Username 3-20 characters, only letters, numbers, _
+  final RegExp passwordReg =
+      RegExp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
+  // Password ≥8 characters, has uppercase, lowercase, number, special character
+  final RegExp emailReg = RegExp(r'^[\w\.-]+@([\w-]+\.)+[a-zA-Z]{2,4}$');
+  // Email format
+
+  bool _isPasswordVisible = true;
+  bool _isConfirmPasswordVisible = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,33 +80,55 @@ class _RegisterPageState extends State<RegisterPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Full Name',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-              )),
-        ),
+        const Text('Full Name',
+            style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: const TextField(
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: "Enter your full name",
+        _inputBox(
+          controller: fullNameController,
+          hint: "Enter your full name",
+        ),
+      ],
+    );
+  }
+
+  Column _userName() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Username',
+            style: TextStyle(color: Colors.blue, fontSize: 16)),
+        const SizedBox(height: 8),
+        _inputBox(
+          controller: usernameController,
+          hint: "Enter your username",
+          errorText: usernameError,
+        ),
+      ],
+    );
+  }
+
+  Column _password() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Password',
+            style: TextStyle(color: Colors.blue, fontSize: 16)),
+        const SizedBox(height: 8),
+        _inputBox(
+          controller: passwordController,
+          hint: "Enter your password",
+          obscureText: _isPasswordVisible,
+          errorText: passwordError,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+              color: Colors.grey,
             ),
+            onPressed: () {
+              setState(() {
+                _isPasswordVisible = !_isPasswordVisible;
+              });
+            },
           ),
         ),
       ],
@@ -91,33 +139,26 @@ class _RegisterPageState extends State<RegisterPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Confirm Password',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-              )),
-        ),
+        const Text('Confirm Password',
+            style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: const TextField(
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: "Enter your confirm password",
+        _inputBox(
+          controller: confirmPasswordController,
+          hint: "Enter your confirm password",
+          obscureText: _isConfirmPasswordVisible,
+          errorText: confirmPasswordError,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _isConfirmPasswordVisible
+                  ? Icons.visibility
+                  : Icons.visibility_off,
+              color: Colors.grey,
             ),
+            onPressed: () {
+              setState(() {
+                _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+              });
+            },
           ),
         ),
       ],
@@ -128,15 +169,62 @@ class _RegisterPageState extends State<RegisterPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Email',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-              )),
-        ),
+        const Text('Email', style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
+        _inputBox(
+          controller: emailController,
+          hint: "Enter your email",
+          errorText: emailError,
+        ),
+      ],
+    );
+  }
+
+  SizedBox _registerButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        onPressed: _validateAndRegister,
+        child: const Text('Register', style: TextStyle(fontSize: 16)),
+      ),
+    );
+  }
+
+  Column _signIn(BuildContext context) {
+    return Column(
+      children: [
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          },
+          child: const Text("Already have an account, sign in",
+              style: TextStyle(color: Colors.black)),
+        ),
+      ],
+    );
+  }
+
+  // Input Box Widget
+  Widget _inputBox({
+    required TextEditingController controller,
+    required String hint,
+    bool obscureText = false,
+    String? errorText,
+    Widget? suffixIcon,
+  }) {
+    return Column(
+      children: [
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -148,132 +236,79 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ],
           ),
-          child: const TextField(
+          child: TextField(
+            controller: controller,
+            obscureText: obscureText,
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: "Enter your email",
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              hintText: hint,
+              suffixIcon: suffixIcon,
             ),
           ),
         ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(errorText,
+                  style: const TextStyle(color: Colors.red, fontSize: 12)),
+            ),
+          ),
       ],
     );
   }
-}
 
-SizedBox _registerButton() {
-  return SizedBox(
-    child: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      onPressed: () {},
-      child: const Text('Register',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-          )),
-    ),
-  );
-}
+  // Validate
+  void _validateAndRegister() {
+    setState(() {
+      usernameError = usernameReg.hasMatch(usernameController.text)
+          ? null
+          : "UUsername 3-20 characters, only letters, numbers, _";
 
-Column _signIn(BuildContext context) {
-  return Column(
-    children: [
-      TextButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const LoginPage(),
-            ),
+      passwordError = passwordReg.hasMatch(passwordController.text)
+          ? null
+          : "Password ≥8 characters, has uppercase, lowercase, number, special character";
+
+      confirmPasswordError =
+          confirmPasswordController.text == passwordController.text
+              ? null
+              : "Confirm password does not match";
+
+      emailError = emailReg.hasMatch(emailController.text)
+          ? null
+          : "Email format is invalid";
+    });
+
+    if (usernameError == null &&
+        passwordError == null &&
+        confirmPasswordError == null &&
+        emailError == null) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Success"),
+            content: const Text("Registration successful!"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
+                },
+                child: const Text("OK"),
+              ),
+            ],
           );
         },
-        child: const Text(
-          "Already have an account, sign in",
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-    ],
-  );
-}
-
-Column _password() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Align(
-        alignment: Alignment.centerLeft,
-        child: Text('Password',
-            style: TextStyle(
-              color: Colors.blue,
-              fontSize: 16,
-            )),
-      ),
-      const SizedBox(height: 8),
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: const TextField(
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            hintText: "Enter your password",
-          ),
-        ),
-      ),
-    ],
-  );
-}
-
-Column _userName() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Align(
-        alignment: Alignment.centerLeft,
-        child: Text('Username',
-            style: TextStyle(
-              color: Colors.blue,
-              fontSize: 16,
-            )),
-      ),
-      const SizedBox(height: 8),
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: const TextField(
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            hintText: "Enter your username",
-          ),
-        ),
-      ),
-    ],
-  );
+      );
+    }
+  }
 }
 
 AppBar appBar(BuildContext context) {
