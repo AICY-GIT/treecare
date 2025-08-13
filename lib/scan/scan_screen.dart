@@ -3,6 +3,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:tree_care/authentication/login_screen.dart';
+
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
 
@@ -21,14 +23,14 @@ class _ScanScreenState extends State<ScanScreen> {
         _imageFile = File(pickedFile.path);
       });
       // this whole this is for shw, change when adding Pl@ntNet API service
-      _showLoadingPopup();//loading trong 4s
+      _showLoadingPopup(); //loading trong 4s
       await Future.delayed(const Duration(seconds: 4));
 
       // random thanh cong hay that bai (chua co service)
       bool isSuccess = Random().nextBool();
       Navigator.of(context).pop(); // tat loading screen
 
-   if (isSuccess) {
+      if (isSuccess) {
         //fake plant info
         _showSuccessPopup(
           scientificName: "Ficus lyrata",
@@ -62,6 +64,7 @@ class _ScanScreenState extends State<ScanScreen> {
       ),
     );
   }
+
   void _showSuccessPopup(
       {required String scientificName,
       required String commonName,
@@ -109,7 +112,6 @@ class _ScanScreenState extends State<ScanScreen> {
       ),
     );
   }
-
 
   void _showErrorPopup() {
     showDialog(
@@ -175,7 +177,13 @@ class _ScanScreenState extends State<ScanScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 50, right: 20),
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LoginPage(),
+              ));
+        },
         style: ElevatedButton.styleFrom(
           minimumSize: Size(MediaQuery.of(context).size.width * 0.35, 50),
           backgroundColor: const Color.fromARGB(255, 195, 229, 244),
