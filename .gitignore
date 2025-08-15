@@ -16,9 +16,7 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# VSCode related
 #.vscode/
 
 # Flutter/Dart/Pub related
@@ -31,19 +29,23 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Ignore auto-generated plugin registrant files (safe to ignore)
+linux/flutter/generated_plugin_registrant.cc
+linux/flutter/generated_plugins.cmake
+macos/Flutter/GeneratedPluginRegistrant.swift
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
+
 # Symbolication related
 app.*.symbols
 
 # Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# Android Studio build artifacts
 /android/app/debug
 /android/app/profile
 /android/app/release
-
-# Created by https://www.toptal.com/developers/gitignore/api/firebase,flutter
-# Edit at https://www.toptal.com/developers/gitignore?templates=firebase,flutter
 
 ### Firebase ###
 .idea
@@ -55,7 +57,6 @@ app.*.map.json
 .firebase/
 
 ### Flutter ###
-# Flutter/Dart/Pub related
 **/doc/api/
 .dart_tool/
 .flutter-plugins
@@ -67,10 +68,6 @@ app.*.map.json
 build/
 coverage/
 lib/generated_plugin_registrant.dart
-# For library packages, don’t commit the pubspec.lock file.
-# Regenerating the pubspec.lock file lets you test your package against the latest compatible versions of its dependencies.
-# See https://dart.dev/guides/libraries/private-files#pubspeclock
-#pubspec.lock
 
 # Android related
 **/android/**/gradle-wrapper.jar
@@ -117,5 +114,3 @@ lib/generated_plugin_registrant.dart
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
-
-# End of https://www.toptal.com/developers/gitignore/api/firebase,flutter
