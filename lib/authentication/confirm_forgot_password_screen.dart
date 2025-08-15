@@ -91,7 +91,7 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: Colors.black.withOpacity( 0.1),
                 offset: const Offset(0, 2),
               ),
             ],
@@ -134,7 +134,7 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: Colors.black.withOpacity(0.1),
                 offset: const Offset(0, 2),
               ),
             ],
@@ -184,7 +184,7 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: Colors.black.withOpacity( 0.1),
                 offset: const Offset(0, 2),
               ),
             ],
