@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:tree_care/authentication/forgot_password_screen.dart';
 import 'package:tree_care/authentication/register_screen.dart';
+import 'package:tree_care/navigation/bottom_nav.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, this.replaceStackOnSuccess = true});
+
+  /// When true, successful login REPLACES the whole stack with BottomNavBar.
+  /// When false (login opened from inside tabs), simply pop back to the tabs.
+  final bool replaceStackOnSuccess;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
+  bool _isPasswordVisible = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar(context),
+      appBar: _appBar(context),
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/bg.png'),
-            fit: BoxFit.cover,
-          ),
+              image: AssetImage('assets/images/bg.png'), fit: BoxFit.cover),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -29,12 +34,7 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 32),
-                  Image.asset(
-                    'assets/icons/logo.png',
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.contain,
-                  ),
+                  Image.asset('assets/icons/logo.png', width: 150, height: 150),
                   const SizedBox(height: 32),
                   _userName(),
                   const SizedBox(height: 16),
@@ -60,75 +60,54 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        onPressed: () {},
+        onPressed: () {
+          Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const BottomNavBar()),
+            (route) => false,
+          );
+        },
         child: const Text('Sign in',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-            )),
+            style: TextStyle(color: Colors.white, fontSize: 16)),
       ),
     );
   }
 
   Column _forgotPassword() {
-    return Column(
-      children: [
-        TextButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ForgotPasswordPage(),
-              ),
-            );
-          },
-          child: const Text(
-            "Forgot password",
-            style: TextStyle(color: Colors.black),
-          ),
-        ),
-      ],
-    );
+    return Column(children: [
+      TextButton(
+        onPressed: () {
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ForgotPasswordPage()));
+        },
+        child: const Text('Forgot password',
+            style: TextStyle(color: Colors.black)),
+      ),
+    ]);
   }
 
   Column _register() {
-    return Column(
-      children: [
-        TextButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const RegisterPage(),
-              ),
-            );
-          },
-          child: const Text(
-            "Don't have an account, register now",
-            style: TextStyle(color: Colors.black),
-          ),
-        ),
-      ],
-    );
+    return Column(children: [
+      TextButton(
+        onPressed: () {
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => const RegisterPage()));
+        },
+        child: const Text("Don't have an account, register now",
+            style: TextStyle(color: Colors.black)),
+      ),
+    ]);
   }
 
-  bool _isPasswordVisible = true;
   Column _password() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Password',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-              )),
-        ),
+            alignment: Alignment.centerLeft,
+            child: Text('Password',
+                style: TextStyle(color: Colors.blue, fontSize: 16))),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
@@ -136,9 +115,8 @@ class _LoginPageState extends State<LoginPage> {
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity( 0.1),
-                offset: const Offset(0, 2),
-              ),
+                  color: Colors.black.withOpacity(0.1),
+                  offset: const Offset(0, 2))
             ],
           ),
           child: TextField(
@@ -147,17 +125,15 @@ class _LoginPageState extends State<LoginPage> {
               border: InputBorder.none,
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: "Enter your password",
+              hintText: 'Enter your password',
               suffixIcon: IconButton(
                 icon: Icon(
-                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.grey,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
-                },
+                    _isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: Colors.grey),
+                onPressed: () =>
+                    setState(() => _isPasswordVisible = !_isPasswordVisible),
               ),
             ),
           ),
@@ -171,13 +147,9 @@ class _LoginPageState extends State<LoginPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Username',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-              )),
-        ),
+            alignment: Alignment.centerLeft,
+            child: Text('Username',
+                style: TextStyle(color: Colors.blue, fontSize: 16))),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
@@ -185,9 +157,8 @@ class _LoginPageState extends State<LoginPage> {
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity( 0.1),
-                offset: const Offset(0, 2),
-              ),
+                  color: Colors.black.withOpacity(0.1),
+                  offset: const Offset(0, 2))
             ],
           ),
           child: const TextField(
@@ -195,7 +166,7 @@ class _LoginPageState extends State<LoginPage> {
               border: InputBorder.none,
               contentPadding:
                   EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: "Enter your username",
+              hintText: 'Enter your username',
             ),
           ),
         ),
@@ -203,21 +174,15 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  AppBar appBar(BuildContext context) {
+  AppBar _appBar(BuildContext context) {
     return AppBar(
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () {
-          Navigator.pop(context);
-        },
-      ),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop()),
       title: const Text('Sign in'),
       centerTitle: true,
       titleTextStyle: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.black,
-      ),
+          fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
     );
   }
 }
