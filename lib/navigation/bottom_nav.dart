@@ -4,6 +4,7 @@ import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'package:tree_care/navigation/history.dart';
 import 'package:tree_care/navigation/home.dart';
 import 'package:tree_care/navigation/scan_screen_auth.dart';
+import 'package:tree_care/navigation/setting.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -55,10 +56,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
           ),
         ),
         PersistentTabConfig(
-          screen: const _LabelScreen(),
+          screen: const Setting(),
           item: ItemConfig(
-            icon: const Icon(Icons.label),
-            title: 'Label',
+            icon: const Icon(Icons.settings),
+            title: 'Setting',
             activeForegroundColor: Colors.black87,
             inactiveForegroundColor: Colors.black45,
           ),
@@ -85,28 +86,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
       stateManagement: true,
       resizeToAvoidBottomInset: true,
       handleAndroidBackButtonPress: true,
-    );
-  }
-}
-
-class _LabelScreen extends StatelessWidget {
-  const _LabelScreen();
-  @override
-  Widget build(BuildContext context) => const _ScreenScaffold(title: 'Label');
-}
-
-class _ScreenScaffold extends StatelessWidget {
-  final String title;
-  const _ScreenScaffold({required this.title});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F5FB),
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text('$title Screen',
-            style: Theme.of(context).textTheme.titleLarge),
-      ),
     );
   }
 }

@@ -154,7 +154,7 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
           // From NO-AUTH flow → go to Login above everything
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => const LoginPage(replaceStackOnSuccess: true),
+              builder: (_) => const LoginPage(),
             ),
           );
         },

@@ -75,7 +75,7 @@ class _HistoryState extends State<History> {
                               offset: Offset(0, 5),
                               blurRadius: 5,
                               spreadRadius: 2)
-                        ]),
+                        ],),
                     child: Row(
                       children: [
                         Padding(
