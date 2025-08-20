@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tree_care/features/fertilizing_schedule.dart';
 import 'package:tree_care/features/watering_schedule.dart';
-import 'package:tree_care/scan/scan_screen.dart';
 
 class PlantDetailPage extends StatefulWidget {
   const PlantDetailPage({super.key});
@@ -186,11 +185,14 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
         IconButton(
           icon: const Icon(Icons.history),
           onPressed: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ScanScreen(),
-                ));
+            Navigator.pop(context);
+            
+            
+            // Navigator.push(
+            //     context,
+            //     MaterialPageRoute(
+            //       builder: (context) => const ScanScreen(),
+            //     ));
           },
         ),
       ],

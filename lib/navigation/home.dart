@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tree_care/features/plant_detail.dart';
 
 class MainHome extends StatefulWidget {
   const MainHome({super.key});
@@ -65,7 +66,7 @@ class _MainHomeState extends State<MainHome> {
                   borderRadius: BorderRadius.circular(15),
                   onTap: () {
                     print('Clicked on ${temp[index]['name']}');
-                    // tap vao hien chi tiet
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=> const PlantDetailPage()));
                   },
                   child: Container(
                     height: 120,
