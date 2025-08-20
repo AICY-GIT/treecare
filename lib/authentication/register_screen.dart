@@ -266,7 +266,7 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() {
       usernameError = usernameReg.hasMatch(usernameController.text)
           ? null
-          : "UUsername 3-20 characters, only letters, numbers, _";
+          : "Username 3-20 characters, only letters, numbers, _";
 
       passwordError = passwordReg.hasMatch(passwordController.text)
           ? null

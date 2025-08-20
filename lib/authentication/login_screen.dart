@@ -224,7 +224,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       usernameError = usernameReg.hasMatch(usernameController.text)
           ? null
-          : "UUsername 3-20 characters, only letters, numbers, _";
+          : "Username 3-20 characters, only letters, numbers, _";
 
       passwordError = passwordReg.hasMatch(passwordController.text)
           ? null
@@ -240,13 +240,7 @@ class _LoginPageState extends State<LoginPage> {
             content: const Text("Log in successful!"),
             actions: [
               TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                  );
-                },
+                onPressed: () {},
                 child: const Text("OK"),
               ),
             ],
