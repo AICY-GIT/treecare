@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:tree_care/authentication/login_screen.dart';
 import 'package:tree_care/features/plant_detail.dart';
 import 'package:tree_care/firebase_options.dart';
-import 'package:tree_care/scan/scan_screen.dart';
+import 'package:tree_care/navigation/bottom_nav.dart';
+import 'package:tree_care/scan/scan_screen_no_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,10 +23,10 @@ class MyApp extends StatelessWidget {
       title: 'Tree Care',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: ScanScreen(),
+      home: const ScanScreenNoAuth(),
     );
   }
 }
