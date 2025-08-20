@@ -10,6 +10,22 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  // Error
+  String? usernameError;
+  String? passwordError;
+
+  // Regex
+  final RegExp usernameReg = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
+  // Username 3-20 characters, only letters, numbers, _
+  final RegExp passwordReg =
+      RegExp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
+  // Password ≥8 characters, has uppercase, lowercase, number, special character
+
+  bool _isPasswordVisible = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,6 +71,7 @@ class _LoginPageState extends State<LoginPage> {
 
   SizedBox _signInButton() {
     return SizedBox(
+      width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -64,12 +81,8 @@ class _LoginPageState extends State<LoginPage> {
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: () {},
-        child: const Text('Sign in',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-            )),
+        onPressed: _validateAndSignIn,
+        child: const Text('Sign in', style: TextStyle(fontSize: 16)),
       ),
     );
   }
@@ -116,50 +129,28 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  bool _isPasswordVisible = true;
   Column _password() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Password',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-              )),
-        ),
+        const Text('Password',
+            style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity( 0.1),
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            obscureText: _isPasswordVisible,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: "Enter your password",
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.grey,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
-                },
-              ),
+        _inputBox(
+          controller: passwordController,
+          hint: "Enter your password",
+          obscureText: _isPasswordVisible,
+          errorText: passwordError,
+          suffixIcon: IconButton(
+            icon: Icon(
+              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+              color: Colors.grey,
             ),
+            onPressed: () {
+              setState(() {
+                _isPasswordVisible = !_isPasswordVisible;
+              });
+            },
           ),
         ),
       ],
@@ -170,37 +161,99 @@ class _LoginPageState extends State<LoginPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Username',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-              )),
-        ),
+        const Text('Username',
+            style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
+        _inputBox(
+          controller: usernameController,
+          hint: "Enter your username",
+          errorText: usernameError,
+        ),
+      ],
+    );
+  }
+
+  // Input Box Widget
+  Widget _inputBox({
+    required TextEditingController controller,
+    required String hint,
+    bool obscureText = false,
+    String? errorText,
+    Widget? suffixIcon,
+  }) {
+    return Column(
+      children: [
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity( 0.1),
+                color: Colors.black.withOpacity(0.1),
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: const TextField(
+          child: TextField(
+            controller: controller,
+            obscureText: obscureText,
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: "Enter your username",
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              hintText: hint,
+              suffixIcon: suffixIcon,
             ),
           ),
         ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(errorText,
+                  style: const TextStyle(color: Colors.red, fontSize: 12)),
+            ),
+          ),
       ],
     );
+  }
+
+  // Validate
+  void _validateAndSignIn() {
+    setState(() {
+      usernameError = usernameReg.hasMatch(usernameController.text)
+          ? null
+          : "UUsername 3-20 characters, only letters, numbers, _";
+
+      passwordError = passwordReg.hasMatch(passwordController.text)
+          ? null
+          : "Password ≥8 characters, has uppercase, lowercase, number, special character";
+    });
+
+    if (usernameError == null && passwordError == null) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Success"),
+            content: const Text("Log in successful!"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
+                },
+                child: const Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   AppBar appBar(BuildContext context) {

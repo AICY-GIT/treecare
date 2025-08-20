@@ -27,7 +27,8 @@ class _ScanScreenState extends State<ScanScreen> {
       await Future.delayed(const Duration(seconds: 4));
 
       // random thanh cong hay that bai (chua co service)
-      bool isSuccess = Random().nextBool();
+      // bool isSuccess = Random().nextBool();
+      bool isSuccess = true; // for testing, always success
       Navigator.of(context).pop(); // tat loading screen
 
       if (isSuccess) {

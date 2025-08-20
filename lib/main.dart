@@ -1,5 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:tree_care/authentication/login_screen.dart';
+import 'package:tree_care/features/plant_detail.dart';
 import 'package:tree_care/firebase_options.dart';
 import 'package:tree_care/scan/scan_screen.dart';
 
