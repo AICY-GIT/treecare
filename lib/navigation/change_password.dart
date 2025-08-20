@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class ConfirmForgotPasswordPage extends StatefulWidget {
-  const ConfirmForgotPasswordPage({super.key});
+class ChangePassword extends StatefulWidget {
+  const ChangePassword({super.key});
 
   @override
-  State<ConfirmForgotPasswordPage> createState() =>
+  State<ChangePassword> createState() =>
       _ConfirmForgotPasswordPageState();
 }
 
-class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
+class _ConfirmForgotPasswordPageState extends State<ChangePassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,14 +29,7 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 32),
-                  Image.asset(
-                    'assets/icons/logo.png',
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 32),
-                  _userName(),
+                  _currenPassword(),
                   const SizedBox(height: 16),
                   _newPassword(),
                   const SizedBox(height: 24),
@@ -70,13 +63,13 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
     );
   }
 
-  Column _userName() {
+  Column _currenPassword() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Align(
           alignment: Alignment.centerLeft,
-          child: Text('OTP code',
+          child: Text('Current Password',
               style: TextStyle(
                 color: Colors.blue,
                 fontSize: 16,
@@ -89,7 +82,7 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity( 0.1),
+                color: Colors.black.withOpacity(0.1),
                 offset: const Offset(0, 2),
               ),
             ],
@@ -104,7 +97,7 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
               border: InputBorder.none,
               contentPadding:
                   EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: "OTP code",
+              hintText: "Current Password",
             ),
           ),
         ),
@@ -182,7 +175,7 @@ class _ConfirmForgotPasswordPageState extends State<ConfirmForgotPasswordPage> {
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity( 0.1),
+                color: Colors.black.withOpacity(0.1),
                 offset: const Offset(0, 2),
               ),
             ],
