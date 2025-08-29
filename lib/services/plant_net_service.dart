@@ -15,7 +15,6 @@ class PlantNetService {
     var nbResults=5;
     var type='kt';
     var apiKey='2b10kAT97dEoBqLgZsKogAOltO';
-    var organs=['auto'];
 
     final url = Uri.https("my-api.plantnet.org","/v2/identify/all",
       {
@@ -36,7 +35,6 @@ class PlantNetService {
     if (response.statusCode == 200) {
       final decoded = json.decode(response.body);
       final results = decoded["results"] as List? ?? [];
-      debugPrint("PlantNet API Response: $results");
       return results.map((r) => PlantIdentification.fromJson(r)).toList();
     } else {
       throw Exception(

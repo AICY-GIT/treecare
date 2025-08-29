@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:tree_care/authentication/login_screen.dart';
 import 'package:tree_care/models/plant_net.dart';
+import 'package:tree_care/scan/result_botton_sheet.dart';
 import 'package:tree_care/services/plant_net_service.dart';
 
 class ScanScreenNoAuth extends StatefulWidget {
@@ -24,12 +25,11 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
     final XFile? pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
       setState(() => _imageFile = File(pickedFile.path));
-
       _showLoadingPopup();
       try {
         final results = await _plantNetService.identifyPlant(_imageFile!);
         if (mounted) Navigator.of(context).pop();
-        _showResultsPopup(results);
+        _showResultsBottomSheet(results);
       } catch (e) {
         if (mounted) Navigator.of(context).pop();
         _showErrorPopup(e.toString());
@@ -46,45 +46,14 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
     );
   }
 
-  void _showResultsPopup(List<PlantIdentification> results) {
-    showDialog(
+ void _showResultsBottomSheet(List<PlantIdentification> results) {
+    showModalBottomSheet(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Identification Results"),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: results.length,
-            itemBuilder: (_, index) {
-              final plant = results[index];
-              return ListTile(
-                leading: plant.imageUrl.isNotEmpty
-                    ? Image.network(plant.imageUrl,
-                        width: 50, height: 50, fit: BoxFit.cover)
-                    : const Icon(Icons.image_not_supported),
-                title: Text(
-                  plant.scientificName,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  "${plant.commonName}\nConfidence: ${(plant.score * 100).toStringAsFixed(1)}%",
-                ),
-                isThreeLine: true,
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          )
-        ],
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ResultBottomSheet(results: results),
     );
   }
-
   void _showErrorPopup(String error) {
     showDialog(
       context: context,

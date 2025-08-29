@@ -21,7 +21,7 @@ factory PlantIdentification.fromJson(Map<String, dynamic> json) {
     if (images.isNotEmpty) {
       final urlObj = images.first["url"];
       if (urlObj is Map) {
-        imageUrl = urlObj["m"] ?? urlObj["o"] ?? urlObj["s"] ?? "";
+        imageUrl = urlObj["o"] ?? urlObj["m"] ?? urlObj["s"] ?? "";
       }
     }
 
