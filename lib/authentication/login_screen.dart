@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:tree_care/authentication/forgot_password_screen.dart';
 import 'package:tree_care/authentication/register_screen.dart';
 import 'package:tree_care/navigation/bottom_nav.dart';
+import 'package:tree_care/services/auth_service.dart';
+import 'package:tree_care/utils/validators.dart';
+import 'package:tree_care/widgets/custom_input_box.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key, this.replaceStackOnSuccess = true});
 
-  /// When true, successful login REPLACES the whole stack with BottomNavBar.
-  /// When false (login opened from inside tabs), simply pop back to the tabs.
   final bool replaceStackOnSuccess;
 
   @override
@@ -15,21 +16,35 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  // Controllers
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  // Firebase
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
   // Error
   String? usernameError;
   String? passwordError;
 
-  // Regex
-  final RegExp usernameReg = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
-  // Username 3-20 characters, only letters, numbers, _
-  final RegExp passwordReg =
-      RegExp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
-  // Password ≥8 characters, has uppercase, lowercase, number, special character
+  bool _obscurePassword = true;
+  bool _rememberSignIn = false;
 
-  bool _isPasswordVisible = true;
+  //Test
+  @override
+  void initState() {
+    super.initState();
+
+    // Pre-fill for testing
+    usernameController.text = "thanhsy4";
+    passwordController.text = "1234Abcd@";
+
+    // Auto login for testing
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _validateAndSignIn();
+    // });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                   _userName(),
                   const SizedBox(height: 16),
                   _password(),
+                  _rememberCheckBox(),
                   const SizedBox(height: 24),
                   _signInButton(),
                   const SizedBox(height: 24),
@@ -64,6 +80,22 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Row _rememberCheckBox() {
+    return Row(
+      children: [
+        Checkbox(
+          value: _rememberSignIn,
+          onChanged: (val) {
+            setState(() {
+              _rememberSignIn = val ?? false;
+            });
+          },
+        ),
+        const Text("Remember Sign In", style: TextStyle(color: Colors.black)),
+      ],
     );
   }
 
@@ -116,19 +148,19 @@ class _LoginPageState extends State<LoginPage> {
         const Text('Password',
             style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        _inputBox(
+        CustomInputBox(
           controller: passwordController,
           hint: "Enter your password",
-          obscureText: _isPasswordVisible,
+          obscureText: _obscurePassword,
           errorText: passwordError,
           suffixIcon: IconButton(
             icon: Icon(
-              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+              _obscurePassword ? Icons.visibility : Icons.visibility_off,
               color: Colors.grey,
             ),
             onPressed: () {
               setState(() {
-                _isPasswordVisible = !_isPasswordVisible;
+                _obscurePassword = !_obscurePassword;
               });
             },
           ),
@@ -144,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
         const Text('Username',
             style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        _inputBox(
+        CustomInputBox(
           controller: usernameController,
           hint: "Enter your username",
           errorText: usernameError,
@@ -153,86 +185,35 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Input Box Widget
-  Widget _inputBox({
-    required TextEditingController controller,
-    required String hint,
-    bool obscureText = false,
-    String? errorText,
-    Widget? suffixIcon,
-  }) {
-    return Column(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: controller,
-            obscureText: obscureText,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: hint,
-              suffixIcon: suffixIcon,
-            ),
-          ),
-        ),
-        if (errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 4, left: 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(errorText,
-                  style: const TextStyle(color: Colors.red, fontSize: 12)),
-            ),
-          ),
-      ],
-    );
-  }
-
-  // Validate
-  void _validateAndSignIn() {
+  // Handle sign in by validating inputs and calling AuthService
+  Future<void> _validateAndSignIn() async {
     setState(() {
-      usernameError = usernameReg.hasMatch(usernameController.text)
-          ? null
-          : "UUsername 3-20 characters, only letters, numbers, _";
-
-      passwordError = passwordReg.hasMatch(passwordController.text)
-          ? null
-          : "Password ≥8 characters, has uppercase, lowercase, number, special character";
+      usernameError = Validators.username(usernameController.text);
+      passwordError = Validators.password(passwordController.text);
     });
 
-    if (usernameError == null && passwordError == null) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text("Success"),
-            content: const Text("Log in successful!"),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context, rootNavigator: true).push(
-                  MaterialPageRoute(
-                    builder: (_) => const BottomNavBar(),
-                  ),
-          );
-                },
-                child: const Text("OK"),
-              ),
-            ],
-          );
-        },
+    if (usernameError != null || passwordError != null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await _authService.loginWithUsername(
+        usernameController.text.trim(),
+        passwordController.text.trim(),
       );
+
+      if (user != null && context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const BottomNavBar()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login failed: $e")),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 

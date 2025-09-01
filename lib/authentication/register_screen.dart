@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tree_care/authentication/login_screen.dart';
+import 'package:tree_care/services/auth_service.dart';
+import 'package:tree_care/utils/validators.dart';
+import 'package:tree_care/widgets/custom_input_box.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -17,20 +20,15 @@ class _RegisterPageState extends State<RegisterPage> {
       TextEditingController();
   final TextEditingController emailController = TextEditingController();
 
+  // Firebase
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+
   // Error
   String? usernameError;
   String? passwordError;
   String? confirmPasswordError;
   String? emailError;
-
-  // Regex
-  final RegExp usernameReg = RegExp(r'^[a-zA-Z0-9_]{3,20}$');
-  // Username 3-20 characters, only letters, numbers, _
-  final RegExp passwordReg =
-      RegExp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
-  // Password ≥8 characters, has uppercase, lowercase, number, special character
-  final RegExp emailReg = RegExp(r'^[\w\.-]+@([\w-]+\.)+[a-zA-Z]{2,4}$');
-  // Email format
 
   bool _isPasswordVisible = true;
   bool _isConfirmPasswordVisible = true;
@@ -83,7 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
         const Text('Full Name',
             style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        _inputBox(
+        CustomInputBox(
           controller: fullNameController,
           hint: "Enter your full name",
         ),
@@ -98,7 +96,7 @@ class _RegisterPageState extends State<RegisterPage> {
         const Text('Username',
             style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        _inputBox(
+        CustomInputBox(
           controller: usernameController,
           hint: "Enter your username",
           errorText: usernameError,
@@ -114,7 +112,7 @@ class _RegisterPageState extends State<RegisterPage> {
         const Text('Password',
             style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        _inputBox(
+        CustomInputBox(
           controller: passwordController,
           hint: "Enter your password",
           obscureText: _isPasswordVisible,
@@ -142,7 +140,7 @@ class _RegisterPageState extends State<RegisterPage> {
         const Text('Confirm Password',
             style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        _inputBox(
+        CustomInputBox(
           controller: confirmPasswordController,
           hint: "Enter your confirm password",
           obscureText: _isConfirmPasswordVisible,
@@ -171,7 +169,7 @@ class _RegisterPageState extends State<RegisterPage> {
       children: [
         const Text('Email', style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        _inputBox(
+        CustomInputBox(
           controller: emailController,
           hint: "Enter your email",
           errorText: emailError,
@@ -215,116 +213,65 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // Input Box Widget
-  Widget _inputBox({
-    required TextEditingController controller,
-    required String hint,
-    bool obscureText = false,
-    String? errorText,
-    Widget? suffixIcon,
-  }) {
-    return Column(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: controller,
-            obscureText: obscureText,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: hint,
-              suffixIcon: suffixIcon,
-            ),
-          ),
-        ),
-        if (errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 4, left: 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(errorText,
-                  style: const TextStyle(color: Colors.red, fontSize: 12)),
-            ),
-          ),
-      ],
-    );
-  }
-
-  // Validate
-  void _validateAndRegister() {
+  // Handle registration by validating inputs and calling AuthService
+  Future<void> _validateAndRegister() async {
     setState(() {
-      usernameError = usernameReg.hasMatch(usernameController.text)
-          ? null
-          : "UUsername 3-20 characters, only letters, numbers, _";
-
-      passwordError = passwordReg.hasMatch(passwordController.text)
-          ? null
-          : "Password ≥8 characters, has uppercase, lowercase, number, special character";
-
-      confirmPasswordError =
-          confirmPasswordController.text == passwordController.text
-              ? null
-              : "Confirm password does not match";
-
-      emailError = emailReg.hasMatch(emailController.text)
-          ? null
-          : "Email format is invalid";
+      usernameError = Validators.username(usernameController.text);
+      passwordError = Validators.password(passwordController.text);
+      confirmPasswordError = Validators.confirmPassword(
+        passwordController.text,
+        confirmPasswordController.text,
+      );
+      emailError = Validators.email(emailController.text);
     });
 
     if (usernameError == null &&
         passwordError == null &&
         confirmPasswordError == null &&
         emailError == null) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text("Success"),
-            content: const Text("Registration successful!"),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                  );
-                },
-                child: const Text("OK"),
-              ),
-            ],
-          );
-        },
-      );
+      setState(() => _isLoading = true);
+
+      try {
+        await _authService.registerUser(
+          fullName: fullNameController.text.trim(),
+          username: usernameController.text.trim(),
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Register successful")),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
-}
 
-AppBar appBar(BuildContext context) {
-  return AppBar(
-    leading: IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        Navigator.pop(context);
-      },
-    ),
-    title: const Text('Register'),
-    centerTitle: true,
-    titleTextStyle: const TextStyle(
-      fontSize: 20,
-      fontWeight: FontWeight.bold,
-      color: Colors.black,
-    ),
-  );
+  AppBar appBar(BuildContext context) {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
+      title: const Text('Register'),
+      centerTitle: true,
+      titleTextStyle: const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: Colors.black,
+      ),
+    );
+  }
 }
