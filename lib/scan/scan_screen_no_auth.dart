@@ -1,9 +1,12 @@
+// lib/screens/scan_screen_no_auth.dart
+
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'dart:math';
-
 import 'package:tree_care/authentication/login_screen.dart';
+import 'package:tree_care/models/plant_net.dart';
+import 'package:tree_care/scan/result_botton_sheet.dart';
+import 'package:tree_care/services/plant_net_service.dart';
 
 class ScanScreenNoAuth extends StatefulWidget {
   const ScanScreenNoAuth({super.key});
@@ -16,34 +19,20 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
   final ImagePicker _picker = ImagePicker();
   File? _imageFile;
 
+  final PlantNetService _plantNetService =PlantNetService();
+
   Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
       setState(() => _imageFile = File(pickedFile.path));
       _showLoadingPopup();
-      await Future.delayed(const Duration(seconds: 1));
-      final isSuccess = Random().nextBool();
-      if (mounted) Navigator.of(context).pop();
-      if (isSuccess) {
-        _showSuccessPopup(
-          scientificName: 'Ficus lyrata',
-          commonName: 'Fiddle Leaf Fig',
-          confidence: 0.87,
-          suggestions: const [
-            {
-              'latin_name': 'Ficus benjamina',
-              'common_name': 'Weeping Fig',
-              'score': 0.65
-            },
-            {
-              'latin_name': 'Ficus elastica',
-              'common_name': 'Rubber Plant',
-              'score': 0.52
-            },
-          ],
-        );
-      } else {
-        _showErrorPopup();
+      try {
+        final results = await _plantNetService.identifyPlant(_imageFile!);
+        if (mounted) Navigator.of(context).pop();
+        _showResultsBottomSheet(results);
+      } catch (e) {
+        if (mounted) Navigator.of(context).pop();
+        _showErrorPopup(e.toString());
       }
     }
   }
@@ -57,50 +46,24 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
     );
   }
 
-  void _showSuccessPopup({
-    required String scientificName,
-    required String commonName,
-    required double confidence,
-    required List<Map<String, dynamic>> suggestions,
-  }) {
+ void _showResultsBottomSheet(List<PlantIdentification> results) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ResultBottomSheet(results: results),
+    );
+  }
+  void _showErrorPopup(String error) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_imageFile != null)
-              Image.file(_imageFile!, height: 100, fit: BoxFit.cover),
+            const Icon(Icons.error, color: Colors.red, size: 80),
             const SizedBox(height: 10),
-            Text(scientificName,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            if (commonName.isNotEmpty)
-              Text(commonName,
-                  style: const TextStyle(fontStyle: FontStyle.italic)),
-            const SizedBox(height: 8),
-            Text('Confidence: ${(confidence * 100).toStringAsFixed(1)}%'),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'))
-        ],
-      ),
-    );
-  }
-
-  void _showErrorPopup() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.error, color: Colors.red, size: 80),
-            SizedBox(height: 10),
-            Text('Something went wrong!')
+            Text('Error: $error'),
           ],
         ),
         actions: [
@@ -135,9 +98,9 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
               const SizedBox(height: 20),
               const Spacer(),
               Row(children: [
-                _openFilebtn(context),
+                _openFileBtn(context),
                 const Spacer(),
-                _loginBtn(context), // Only here (no tabs yet)
+                _loginBtn(context),
               ]),
             ],
           ),
@@ -151,11 +114,8 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
       padding: const EdgeInsets.only(bottom: 50, right: 20),
       child: ElevatedButton(
         onPressed: () {
-          // From NO-AUTH flow → go to Login above everything
           Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const LoginPage(),
-            ),
+            MaterialPageRoute(builder: (_) => const LoginPage()),
           );
         },
         style: ElevatedButton.styleFrom(
@@ -172,7 +132,7 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
     );
   }
 
-  Padding _openFilebtn(BuildContext context) {
+  Padding _openFileBtn(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 50, left: 20),
       child: ElevatedButton(
