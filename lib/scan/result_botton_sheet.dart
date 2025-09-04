@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:tree_care/models/plant_net.dart';
 import 'package:tree_care/scan/wiki_result.dart';
 import 'package:tree_care/services/wikipedia_service.dart';
+import 'package:tree_care/utils/dialogs.dart';
 
 class ResultBottomSheet extends StatelessWidget {
   final List<PlantIdentification> results;
@@ -41,13 +42,7 @@ class ResultBottomSheet extends StatelessWidget {
                 final plant = results[index];
                 return GestureDetector(
                   onTap: () async{
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (_) => const Center(
-                          child:
-                              CircularProgressIndicator(color: Colors.green)),
-                    );
+                    Popup.showLoading(context);
                     try{
                        final summary = await fetchWikiSummary(plant.scientificName);
                        //neu ng dung quit early
@@ -62,30 +57,7 @@ class ResultBottomSheet extends StatelessWidget {
                       );
                     }catch(e){
                       Navigator.of(context).pop();
-                      showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.error,
-                                  color: Colors.red, size: 80),
-                              const SizedBox(height: 10),
-                              Text('Error: $e'),
-                            ],
-                          ),
-                          actions: [
-                            Center(
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red),
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('Retry'),
-                              ),
-                            )
-                          ],
-                        ),
-                      );
+                      Popup.showErrorPopup(context, e.toString());
                     }
                   },
                   child: Card(
