@@ -1,6 +1,6 @@
 // lib/widgets/result_bottom_sheet.dart
 import 'package:flutter/material.dart';
-import 'package:tree_care/models/plant_net.dart';
+import 'package:tree_care/models/plant_net_model.dart';
 import 'package:tree_care/scan/wiki_result.dart';
 import 'package:tree_care/services/wikipedia_service.dart';
 import 'package:tree_care/utils/dialogs.dart';
@@ -47,8 +47,8 @@ class ResultBottomSheet extends StatelessWidget {
                        final summary = await fetchWikiSummary(plant.scientificName);
                        //neu ng dung quit early
                        if (!context.mounted) return;
-                       Navigator.of(context).pop();
-                        Navigator.push(
+                      Popup.hideLoading(context);
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
@@ -56,7 +56,7 @@ class ResultBottomSheet extends StatelessWidget {
                         ),
                       );
                     }catch(e){
-                      Navigator.of(context).pop();
+                      Popup.hideLoading(context);
                       Popup.showErrorPopup(context, e.toString());
                     }
                   },

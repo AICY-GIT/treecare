@@ -16,7 +16,7 @@ class Popup{
   }
 
   static void showErrorPopup(BuildContext context,String error){
-       showDialog(
+      showDialog(
       context: context,
       builder: (_) => AlertDialog(
         content: Column(
@@ -31,7 +31,7 @@ class Popup{
           Center(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
               child: const Text('Retry'),
             ),
           )

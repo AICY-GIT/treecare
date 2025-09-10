@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:tree_care/authentication/login_screen.dart';
-import 'package:tree_care/models/plant_net.dart';
+import 'package:tree_care/models/plant_net_model.dart';
 import 'package:tree_care/scan/result_botton_sheet.dart';
 import 'package:tree_care/services/plant_net_service.dart';
 import 'package:tree_care/utils/dialogs.dart';
@@ -23,9 +23,9 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
   Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
-      setState(() => _imageFile = File(pickedFile.path));
-      Popup.showLoading(context);
       try {
+        setState(() => _imageFile = File(pickedFile.path));
+        Popup.showLoading(context);
         final results = await _plantNetService.identifyPlant(_imageFile!);
         if(!mounted) return;
         Popup.hideLoading(context);

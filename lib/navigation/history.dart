@@ -1,4 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:tree_care/models/history_model.dart';
+import 'package:tree_care/models/plant_net_model.dart';
+import 'package:tree_care/scan/result_botton_sheet.dart';
+import 'package:tree_care/services/firebase_db_service.dart';
+import 'package:tree_care/utils/dialogs.dart';
 
 class History extends StatefulWidget {
   const History({super.key});
@@ -8,28 +14,23 @@ class History extends StatefulWidget {
 }
 
 class _HistoryState extends State<History> {
-  List<Map<String, dynamic>> temp = [];
-  void getInfo() {
-    temp = [
-      {
-        'pic': 'assets/icons/logo.png',
-        'name': 'TreeName1',
-        'idTime': '13/8/2025',
-        'added': true
-      },
-      {
-        'pic': 'assets/icons/logo.png',
-        'name': 'TreeName2',
-        'idTime': '13/8/2025',
-        'added': false
-      },
-      {
-        'pic': 'assets/icons/logo.png',
-        'name': 'TreeName2',
-        'idTime': '13/8/2025',
-        'added': false
-      },
-    ];
+  List<ScanHistory> historyList = [];
+  bool isLoading = true;
+  final FirebaseDbService _dbService = FirebaseDbService();
+
+  Future<void> getInfo() async {
+    try {
+      final result = await _dbService.readScanHistory();
+      if (!mounted) return;
+      setState(() {
+        historyList = result;
+        isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      Popup.showErrorPopup(context, e.toString());
+    }
   }
 
   @override
@@ -49,91 +50,106 @@ class _HistoryState extends State<History> {
           ),
         ),
         child: SafeArea(
-          child: ListView.separated(
-            separatorBuilder: (context, index) => SizedBox(
-              height: 20,
-            ),
-            itemCount: temp.length,
-            scrollDirection: Axis.vertical,
-            itemBuilder: (BuildContext context, int index) {
-              return Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(15),
-                  onTap: () {
-                    print('Clicked on ${temp[index]['name']}');
-                    // tap vao hien chi tiet
-                  },
-                  child: Container(
-                    height: 120,
-                    decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 195, 229, 244),
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.grey,
-                              offset: Offset(0, 5),
-                              blurRadius: 5,
-                              spreadRadius: 2)
-                        ],),
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.asset(temp[index]['pic'])),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              temp[index]['name'],
-                              style: TextStyle(
-                                  fontSize: 27, fontWeight: FontWeight.bold),
+          child: isLoading
+              //dieu kien true
+              ? const Center(child: CircularProgressIndicator())
+              //dieu kien false
+              : historyList.isEmpty
+                  ? const Center(
+                      child: Text(
+                        "No history found",
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    )
+                  : RefreshIndicator(
+                    onRefresh: getInfo,
+                    child: ListView.separated(
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 20),
+                        itemCount: historyList.length,
+                        itemBuilder: (context, index) {
+                          final item = historyList[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(15),
+                              onTap: () {
+                                List<PlantIdentification> results=item.results;
+                                _showResultsBottomSheet(results);
+                              },
+                              child: Container(
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: const Color.fromARGB(255, 195, 229, 244),
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.grey,
+                                      offset: Offset(0, 5),
+                                      blurRadius: 5,
+                                      spreadRadius: 2,
+                                    )
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.memory(
+                                          const Base64Decoder()
+                                              .convert(item.base64Image),
+                                          width: 100,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 20.0),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              "Identified at: \n${item.timestamp.toLocal().toString().split(' ')[0]}",
+                                              style: const TextStyle(
+                                                fontSize: 25,
+                                                color: Colors.black54,
+                                                fontWeight: FontWeight.bold
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            Text(
-                              'Identify at:',
-                              style: TextStyle(
-                                  fontSize: 25, fontWeight: FontWeight.w500),
-                            ),
-                            Text(
-                              temp[index]['idTime'],
-                              style: TextStyle(
-                                  fontSize: 23, fontWeight: FontWeight.w400),
-                            )
-                          ],
-                        ),
-                        Spacer(),
-                        IconButton(
-                          iconSize: 32,
-                          icon: Icon(
-                            temp[index]['added']
-                                ? Icons.add_circle_outline
-                                : Icons.check_circle,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              if (temp[index]['added'] == true) {
-                                temp[index]['added'] = false;
-                              } else {
-                                temp[index]['added'] = true;
-                              }
-                            });
-                          },
-                        )
-                      ],
-                    ),
+                          );
+                        },
+                      ),
                   ),
-                ),
-              );
-            },
-          ),
         ),
       ),
     );
   }
+   void _showResultsBottomSheet(List<PlantIdentification> results) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ResultBottomSheet(results: results),
+    );
+  }
 }
+
+
