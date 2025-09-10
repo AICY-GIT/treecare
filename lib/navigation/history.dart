@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:tree_care/models/history_model.dart';
+import 'package:provider/provider.dart';
 import 'package:tree_care/models/plant_net_model.dart';
+import 'package:tree_care/provider/history_provider.dart';
 import 'package:tree_care/scan/result_botton_sheet.dart';
-import 'package:tree_care/services/firebase_db_service.dart';
 import 'package:tree_care/utils/dialogs.dart';
 
 class History extends StatefulWidget {
@@ -14,33 +14,20 @@ class History extends StatefulWidget {
 }
 
 class _HistoryState extends State<History> {
-  List<ScanHistory> historyList = [];
-  bool isLoading = true;
-  final FirebaseDbService _dbService = FirebaseDbService();
-
-  Future<void> getInfo() async {
-    try {
-      final result = await _dbService.readScanHistory();
-      if (!mounted) return;
-      setState(() {
-        historyList = result;
-        isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => isLoading = false);
-      Popup.showErrorPopup(context, e.toString());
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    getInfo();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<HistoryProvider>().loadHistory();
+      }); 
   }
 
   @override
   Widget build(BuildContext context) {
+    final historyProvider = context.watch<HistoryProvider>();
+      if (historyProvider.errorMessage != null) {
+      Popup.showErrorPopup(context, historyProvider.errorMessage!);
+    }
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -50,11 +37,9 @@ class _HistoryState extends State<History> {
           ),
         ),
         child: SafeArea(
-          child: isLoading
-              //dieu kien true
+          child: historyProvider.isLoading
               ? const Center(child: CircularProgressIndicator())
-              //dieu kien false
-              : historyList.isEmpty
+              : historyProvider.historyList.isEmpty
                   ? const Center(
                       child: Text(
                         "No history found",
@@ -62,26 +47,26 @@ class _HistoryState extends State<History> {
                       ),
                     )
                   : RefreshIndicator(
-                    onRefresh: getInfo,
-                    child: ListView.separated(
+                      onRefresh: () => historyProvider.loadHistory(),
+                      child: ListView.separated(
                         separatorBuilder: (context, index) =>
                             const SizedBox(height: 20),
-                        itemCount: historyList.length,
+                        itemCount: historyProvider.historyList.length,
                         itemBuilder: (context, index) {
-                          final item = historyList[index];
+                          final item = historyProvider.historyList[index];
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 5),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(15),
                               onTap: () {
-                                List<PlantIdentification> results=item.results;
-                                _showResultsBottomSheet(results);
+                                _showResultsBottomSheet(item.results);
                               },
                               child: Container(
                                 height: 120,
                                 decoration: BoxDecoration(
-                                  color: const Color.fromARGB(255, 195, 229, 244),
+                                  color:
+                                      const Color.fromARGB(255, 195, 229, 244),
                                   borderRadius: BorderRadius.circular(15),
                                   boxShadow: const [
                                     BoxShadow(
@@ -117,13 +102,12 @@ class _HistoryState extends State<History> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            const SizedBox(height: 6),
                                             Text(
                                               "Identified at: \n${item.timestamp.toLocal().toString().split(' ')[0]}",
                                               style: const TextStyle(
                                                 fontSize: 25,
                                                 color: Colors.black54,
-                                                fontWeight: FontWeight.bold
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                           ],
@@ -137,12 +121,13 @@ class _HistoryState extends State<History> {
                           );
                         },
                       ),
-                  ),
+                    ),
         ),
       ),
     );
   }
-   void _showResultsBottomSheet(List<PlantIdentification> results) {
+
+  void _showResultsBottomSheet(List<PlantIdentification> results) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -151,5 +136,3 @@ class _HistoryState extends State<History> {
     );
   }
 }
-
-

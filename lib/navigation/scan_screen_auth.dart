@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:tree_care/authentication/login_screen.dart';
 import 'package:tree_care/models/plant_net_model.dart';

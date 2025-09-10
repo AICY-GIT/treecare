@@ -55,6 +55,7 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
         decoration: const BoxDecoration(
           image: DecorationImage(
               image: AssetImage('assets/images/temp_bg.png'),
+                                    
               fit: BoxFit.cover),
         ),
         child: SafeArea(

@@ -7,19 +7,22 @@ class HistoryProvider extends ChangeNotifier {
 
   List<ScanHistory> _historyList = [];
   bool _isLoading = false;
+  String? _errorMessage;
 
   //puplic chi dc get thoi ko set
   List<ScanHistory> get historyList => _historyList;
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
   Future<void> loadHistory() async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
       _historyList = await _dbService.readScanHistory();
     } catch (e) {
-      // you could store error message in a String variable if you want
+      _errorMessage = e.toString();
       _historyList = [];
     }
 

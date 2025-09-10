@@ -5,7 +5,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:tree_care/models/history_model.dart';
 import 'package:tree_care/models/plant_net_model.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 class FirebaseDbService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
