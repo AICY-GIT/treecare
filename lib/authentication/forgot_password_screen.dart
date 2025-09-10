@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tree_care/authentication/confirm_forgot_password_screen.dart';
 import 'package:tree_care/authentication/register_screen.dart';
+import 'package:tree_care/services/auth_service.dart';
+import 'package:tree_care/widgets/custom_input_box.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -10,6 +12,22 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  // Controllers
+  final TextEditingController emailController = TextEditingController();
+
+  // Firebase
+  final AuthService _authService = AuthService();
+
+  // Error
+  String? emailError;
+
+  // Dispose controllers when not needed
+  @override
+  void dispose() {
+    emailController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,8 +54,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 32),
-                  _userName(),
-                  const SizedBox(height: 16),
                   _email(),
                   const SizedBox(height: 24),
                   _forgotPasswordButton(),
@@ -50,43 +66,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Column _userName() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Username',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-              )),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: const TextField(
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: "Enter your username",
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -119,13 +98,26 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const ConfirmForgotPasswordPage(),
-            ),
-          );
+        onPressed: () async {
+          setState(() {
+            emailError = null;
+          });
+          final email = emailController.text.trim();
+          try {
+            await _authService.resetPassword(email);
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content:
+                    Text("Password reset email sent. Please check your inbox."),
+              ),
+            );
+            Navigator.pop(context); // Back to login screen
+          } catch (e) {
+            setState(() {
+              emailError = e.toString();
+            });
+          }
         },
         child: const Text('Forgot Password',
             style: TextStyle(
@@ -182,34 +174,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Email',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-              )),
-        ),
+        const Text('Email', style: TextStyle(color: Colors.blue, fontSize: 16)),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity( 0.1),
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: const TextField(
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              hintText: "Enter your email",
-            ),
-          ),
+        CustomInputBox(
+          controller: emailController,
+          hint: "Enter your email",
+          errorText: emailError,
         ),
       ],
     );

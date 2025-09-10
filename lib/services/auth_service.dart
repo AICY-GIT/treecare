@@ -45,6 +45,19 @@ class AuthService {
     }
   }
 
+  //Login user with email and password
+  Future<User?> loginWithEmail(String email, String password) async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return userCredential.user;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message);
+    }
+  }
+
   // Login user with username and password
   Future<User?> loginWithUsername(String username, String password) async {
     try {
@@ -53,7 +66,7 @@ class AuthService {
           await _dbRef.orderByChild("username").equalTo(username).once();
 
       if (event.snapshot.value == null) {
-        throw Exception("Username not found");
+        throw Exception("Username not found.");
       }
 
       // Take email from the snapshot
@@ -87,7 +100,7 @@ class AuthService {
       await user.updateDisplayName(newFullName);
       await user.reload();
     } catch (e) {
-      throw Exception("Failed to update full name: $e");
+      throw Exception("Failed to update full name.");
     }
   }
 
@@ -103,7 +116,7 @@ class AuthService {
         );
       }
     } catch (e) {
-      throw Exception("Logout failed: $e");
+      throw Exception("Logout failed.");
     }
   }
 
@@ -133,6 +146,20 @@ class AuthService {
       await _auth.signOut();
     } on FirebaseAuthException catch (e) {
       throw Exception(e.message ?? "Change password failed");
+    }
+  }
+
+  // Forgot password - send reset email
+  // Firebase help but wrong required password regex
+  Future<void> resetPassword(String email) async {
+    if (email.isEmpty) {
+      throw Exception("Email cannot be empty");
+    }
+
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } catch (e) {
+      throw Exception("Failed to send password reset email.");
     }
   }
 }
