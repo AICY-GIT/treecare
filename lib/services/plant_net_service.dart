@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:tree_care/models/plant_net.dart';
+import 'package:tree_care/models/plant_net_model.dart';
 
 class PlantNetService {
   final String project;

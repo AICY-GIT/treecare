@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tree_care/firebase_options.dart';
+import 'package:tree_care/provider/history_provider.dart';
 import 'package:tree_care/scan/scan_screen_no_auth.dart';
 
 void main() async {
@@ -8,7 +10,14 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+    runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => HistoryProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

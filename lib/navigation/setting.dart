@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:tree_care/services/auth_service.dart';
+import 'package:tree_care/services/firebase_auth_service.dart';
 import 'package:tree_care/authentication/login_screen.dart';
 import 'package:tree_care/navigation/change_password.dart';
 import 'package:tree_care/widgets/card_settings.dart';

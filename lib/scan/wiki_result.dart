@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tree_care/models/wiki_summary_model.dart';
+import 'package:tree_care/utils/dialogs.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WikiResult extends StatefulWidget {
@@ -176,9 +177,7 @@ class _WikiResultState extends State<WikiResult> {
         throw Exception("Launch failed");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not open Wikipedia page")),
-      );
+      Popup.showErrorPopup(context, "Could not open Wikipedia page");
     }
    
   }

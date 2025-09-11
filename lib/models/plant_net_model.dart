@@ -12,7 +12,8 @@ class PlantIdentification {
     required this.score,
   });
 
-factory PlantIdentification.fromJson(Map<String, dynamic> json) {
+  factory PlantIdentification.fromJson(Map<String, dynamic> json) {
+    // tim value dua theo key va bo vao bien, mac dinh la {}
     final species = json["species"] ?? {};
     final commonNames = List<String>.from(species["commonNames"] ?? []);
     final images = json["images"] as List? ?? [];
@@ -32,5 +33,20 @@ factory PlantIdentification.fromJson(Map<String, dynamic> json) {
       score: (json["score"] ?? 0).toDouble(),
     );
   }
-
+  factory PlantIdentification.fromJsonFirebase(Map<String, dynamic> json) {
+      return PlantIdentification(
+        scientificName: json["scientificName"] ?? "",
+        commonName: json["commonName"] ?? "",
+        imageUrl: json["imageUrl"] ?? "",
+        score: (json["score"] ?? 0).toDouble(),
+      );
+  }
+  Map<String, dynamic> toJson() {
+    return {
+      "scientificName": scientificName,
+      "commonName": commonName,
+      "imageUrl": imageUrl,
+      "score": score,
+    };
+  }
 }

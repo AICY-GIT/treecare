@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
+import 'package:provider/provider.dart';
 
 import 'package:tree_care/navigation/history.dart';
 import 'package:tree_care/navigation/home.dart';
 import 'package:tree_care/navigation/scan_screen_auth.dart';
 import 'package:tree_care/navigation/setting.dart';
+import 'package:tree_care/provider/history_provider.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -26,6 +28,11 @@ class _BottomNavBarState extends State<BottomNavBar> {
   Widget build(BuildContext context) {
     return PersistentTabView(
       controller: _controller,
+      onTabChanged: (index) {
+        if (index == 1) {
+          context.read<HistoryProvider>().loadHistory();
+        }
+      },
       tabs: [
         PersistentTabConfig(
           screen: const MainHome(),
