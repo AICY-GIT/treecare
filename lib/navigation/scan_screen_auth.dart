@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:tree_care/authentication/login_screen.dart';
+import 'package:tree_care/models/plant_net_model.dart';
+import 'package:tree_care/scan/result_botton_sheet.dart';
+import 'package:tree_care/services/firebase_db_service.dart';
+import 'package:tree_care/services/plant_net_service.dart';
+import 'package:tree_care/utils/dialogs.dart';
 
 class ScanScreenAuth extends StatefulWidget {
   const ScanScreenAuth({super.key});
@@ -16,103 +20,40 @@ class _ScanScreenAuthState extends State<ScanScreenAuth> {
   final ImagePicker _picker = ImagePicker();
   File? _imageFile;
 
+  final PlantNetService _plantNetService = PlantNetService();
+  final FirebaseDbService _dbService = FirebaseDbService();
+
+
   Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
-      setState(() => _imageFile = File(pickedFile.path));
-      _showLoadingPopup();
-      await Future.delayed(const Duration(seconds: 1));
-      final isSuccess = Random().nextBool();
-      if (mounted) Navigator.of(context, rootNavigator: true).pop();
-      if (isSuccess) {
-        _showSuccessPopup(
-          scientificName: 'Ficus lyrata',
-          commonName: 'Fiddle Leaf Fig',
-          confidence: 0.87,
-          suggestions: const [
-            {
-              'latin_name': 'Ficus benjamina',
-              'common_name': 'Weeping Fig',
-              'score': 0.65
-            },
-            {
-              'latin_name': 'Ficus elastica',
-              'common_name': 'Rubber Plant',
-              'score': 0.52
-            },
-          ],
+      try {
+        setState(() => _imageFile = File(pickedFile.path));
+        Popup.showLoading(context);
+        final results = await _plantNetService.identifyPlant(_imageFile!);
+
+        await _dbService.createScanHistory(
+          scanResults: results,
+          scanImage: pickedFile,
         );
-      } else {
-        _showErrorPopup();
+
+        if (!mounted) return;
+        Popup.hideLoading(context);
+        _showResultsBottomSheet(results);
+      } catch (e) {
+        if (!mounted) return;
+        Popup.hideLoading(context);
+        Popup.showErrorPopup(context, e.toString());
       }
     }
   }
 
-  void _showLoadingPopup() {
-    showDialog(
+  void _showResultsBottomSheet(List<PlantIdentification> results) {
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      builder: (_) =>
-          const Center(child: CircularProgressIndicator(color: Colors.green)),
-    );
-  }
-
-  void _showSuccessPopup({
-    required String scientificName,
-    required String commonName,
-    required double confidence,
-    required List<Map<String, dynamic>> suggestions,
-  }) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_imageFile != null)
-              Image.file(_imageFile!, height: 100, fit: BoxFit.cover),
-            const SizedBox(height: 10),
-            Text(scientificName,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            if (commonName.isNotEmpty)
-              Text(commonName,
-                  style: const TextStyle(fontStyle: FontStyle.italic)),
-            const SizedBox(height: 8),
-            Text('Confidence: ${(confidence * 100).toStringAsFixed(1)}%'),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'))
-        ],
-      ),
-    );
-  }
-
-  void _showErrorPopup() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.error, color: Colors.red, size: 80),
-            SizedBox(height: 10),
-            Text('Something went wrong!')
-          ],
-        ),
-        actions: [
-          Center(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Retry'),
-            ),
-          ),
-        ],
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ResultBottomSheet(results: results),
     );
   }
 
@@ -135,9 +76,9 @@ class _ScanScreenAuthState extends State<ScanScreenAuth> {
               const SizedBox(height: 20),
               const Spacer(),
               Row(children: [
-                _openFilebtn(context),
+                _openFileBtn(context),
                 const Spacer(),
-                _loginBtn(context), // This opens Login above the tabs
+                _loginBtn(context),
               ]),
             ],
           ),
@@ -151,11 +92,8 @@ class _ScanScreenAuthState extends State<ScanScreenAuth> {
       padding: const EdgeInsets.only(bottom: 50, right: 20),
       child: ElevatedButton(
         onPressed: () {
-          // IMPORTANT: push on ROOT navigator so the BottomNav is hidden
-          Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute(
-              builder: (_) => const LoginPage(),
-            ),
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const LoginPage()),
           );
         },
         style: ElevatedButton.styleFrom(
@@ -172,7 +110,7 @@ class _ScanScreenAuthState extends State<ScanScreenAuth> {
     );
   }
 
-  Padding _openFilebtn(BuildContext context) {
+  Padding _openFileBtn(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 50, left: 20),
       child: ElevatedButton(

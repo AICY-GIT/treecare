@@ -1,12 +1,11 @@
-// lib/screens/scan_screen_no_auth.dart
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:tree_care/authentication/login_screen.dart';
-import 'package:tree_care/models/plant_net.dart';
+import 'package:tree_care/models/plant_net_model.dart';
 import 'package:tree_care/scan/result_botton_sheet.dart';
 import 'package:tree_care/services/plant_net_service.dart';
+import 'package:tree_care/utils/dialogs.dart';
 
 class ScanScreenNoAuth extends StatefulWidget {
   const ScanScreenNoAuth({super.key});
@@ -24,26 +23,19 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
   Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
-      setState(() => _imageFile = File(pickedFile.path));
-      _showLoadingPopup();
       try {
+        setState(() => _imageFile = File(pickedFile.path));
+        Popup.showLoading(context);
         final results = await _plantNetService.identifyPlant(_imageFile!);
-        if (mounted) Navigator.of(context).pop();
+        if(!mounted) return;
+        Popup.hideLoading(context);
         _showResultsBottomSheet(results);
       } catch (e) {
-        if (mounted) Navigator.of(context).pop();
-        _showErrorPopup(e.toString());
+        if (!mounted) return;
+        Popup.hideLoading(context);
+        Popup.showErrorPopup(context, e.toString());
       }
     }
-  }
-
-  void _showLoadingPopup() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) =>
-          const Center(child: CircularProgressIndicator(color: Colors.green)),
-    );
   }
 
  void _showResultsBottomSheet(List<PlantIdentification> results) {
@@ -52,30 +44,6 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => ResultBottomSheet(results: results),
-    );
-  }
-  void _showErrorPopup(String error) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error, color: Colors.red, size: 80),
-            const SizedBox(height: 10),
-            Text('Error: $error'),
-          ],
-        ),
-        actions: [
-          Center(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Retry'),
-            ),
-          )
-        ],
-      ),
     );
   }
 
@@ -87,6 +55,7 @@ class _ScanScreenNoAuthState extends State<ScanScreenNoAuth> {
         decoration: const BoxDecoration(
           image: DecorationImage(
               image: AssetImage('assets/images/temp_bg.png'),
+                                    
               fit: BoxFit.cover),
         ),
         child: SafeArea(
