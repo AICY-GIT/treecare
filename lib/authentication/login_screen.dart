@@ -3,6 +3,7 @@ import 'package:tree_care/authentication/forgot_password_screen.dart';
 import 'package:tree_care/authentication/register_screen.dart';
 import 'package:tree_care/navigation/bottom_nav.dart';
 import 'package:tree_care/services/firebase_auth_service.dart';
+import 'package:tree_care/services/secure_storage_service.dart';
 import 'package:tree_care/utils/validators.dart';
 import 'package:tree_care/widgets/custom_input_box.dart';
 
@@ -28,22 +29,26 @@ class _LoginPageState extends State<LoginPage> {
   String? usernameError;
   String? passwordError;
 
-  bool _obscurePassword = true;
+  // Secure Storage
+  final SecureStorageService _secureStorage = SecureStorageService();
   bool _rememberSignIn = false;
+
+  // Password visibility
+  bool _obscurePassword = true;
 
   //Test
   @override
   void initState() {
     super.initState();
+    _loadSavedCredentials();
+  }
 
-    // Pre-fill for testing
-    usernameController.text = "thanhsy4";
-    passwordController.text = "1234Abcd@";
-
-    // Auto login for testing
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   _validateAndSignIn();
-    // });
+  // Dispose controllers when not needed
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -188,7 +193,13 @@ class _LoginPageState extends State<LoginPage> {
   // Handle sign in by validating inputs and calling AuthService
   Future<void> _validateAndSignIn() async {
     setState(() {
-      usernameError = Validators.username(usernameController.text);
+      final input = usernameController.text.trim();
+      if (Validators.username(input) != null &&
+          Validators.email(input) != null) {
+        usernameError = 'Enter a valid username or email';
+      } else {
+        usernameError = null;
+      }
       passwordError = Validators.password(passwordController.text);
     });
 
@@ -197,12 +208,22 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final user = await _authService.loginWithUsername(
-        usernameController.text.trim(),
-        passwordController.text.trim(),
-      );
+      final identifier = usernameController.text.trim();
+      final password = passwordController.text.trim();
+
+      final user = (Validators.email(identifier) == null)
+          ? await _authService.loginWithEmail(identifier, password)
+          : await _authService.loginWithUsername(identifier, password);
 
       if (user != null && context.mounted) {
+        if (_rememberSignIn) {
+          await _secureStorage.saveCredentials(
+            usernameController.text.trim(),
+            passwordController.text.trim(),
+          );
+        } else {
+          await _secureStorage.clearCredentials();
+        }
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const BottomNavBar()),
@@ -227,5 +248,16 @@ class _LoginPageState extends State<LoginPage> {
       titleTextStyle: const TextStyle(
           fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
     );
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final creds = await _secureStorage.getCredentials();
+    if (creds['username'] != null && creds['password'] != null) {
+      setState(() {
+        usernameController.text = creds['username']!;
+        passwordController.text = creds['password']!;
+        _rememberSignIn = true;
+      });
+    }
   }
 }

@@ -33,6 +33,17 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isPasswordVisible = true;
   bool _isConfirmPasswordVisible = true;
 
+  // Dispose controllers when not needed
+  @override
+  void dispose() {
+    fullNameController.dispose();
+    usernameController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

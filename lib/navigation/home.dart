@@ -66,7 +66,10 @@ class _MainHomeState extends State<MainHome> {
                   borderRadius: BorderRadius.circular(15),
                   onTap: () {
                     print('Clicked on ${temp[index]['name']}');
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=> const PlantDetailPage()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const PlantDetailPage()));
                   },
                   child: Container(
                     height: 120,
