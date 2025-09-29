@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:tree_care/features/edit_plant.dart';
 import 'package:tree_care/features/fertilizing_schedule.dart';
 import 'package:tree_care/features/watering_schedule.dart';
+import 'package:tree_care/models/plant_model.dart';
+import 'package:tree_care/utils/image_convert.dart';
 
 class PlantDetailPage extends StatefulWidget {
-  const PlantDetailPage({super.key});
+  final String plantId;
+  final Map<String, dynamic> plantData;
+
+  const PlantDetailPage({
+    super.key,
+    required this.plantId,
+    required this.plantData,
+  });
 
   @override
   State<PlantDetailPage> createState() => _PlantDetailPageState();
@@ -12,6 +22,8 @@ class PlantDetailPage extends StatefulWidget {
 class _PlantDetailPageState extends State<PlantDetailPage> {
   @override
   Widget build(BuildContext context) {
+    final data = widget.plantData;
+
     return Scaffold(
       appBar: appBar(context),
       body: Container(
@@ -29,17 +41,12 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 32),
-                  Image.asset(
-                    'assets/icons/logo.png',
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.contain,
-                  ),
-                  _plantName(),
+                  ImageUtils.plantImage(data['base64Image'], size: 100),
+                  _plantName(data['plantName'] ?? 'No name'),
                   const SizedBox(height: 8),
-                  _plantSpecies(),
+                  _plantSpecies(data['plantSpecies'] ?? 'Unknown'),
                   const SizedBox(height: 8),
-                  _plantNote(),
+                  _plantNote(data['plantNote'] ?? ''),
                   const SizedBox(height: 20),
                   _setWateringButton(context),
                   _setFertilizingButton(context),
@@ -53,7 +60,7 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
     );
   }
 
-  Column _plantNote() {
+  Column _plantNote(String notes) {
     return Column(
       children: [
         const Text(
@@ -61,13 +68,14 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
           style: TextStyle(fontSize: 16),
         ),
         const SizedBox(height: 12),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: TextField(
+            controller: TextEditingController(text: notes),
             maxLines: 5,
-            decoration: InputDecoration(
+            readOnly: true,
+            decoration: const InputDecoration(
               border: OutlineInputBorder(),
-              hintText: "Enter your notes here",
               contentPadding: EdgeInsets.all(8.0),
               fillColor: Colors.white,
               filled: true,
@@ -78,17 +86,17 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
     );
   }
 
-  Text _plantSpecies() {
+  Text _plantSpecies(String species) {
     return Text(
-      "Species", // replace with actual species
-      style: TextStyle(fontSize: 16),
+      species,
+      style: const TextStyle(fontSize: 16),
     );
   }
 
-  Text _plantName() {
+  Text _plantName(String name) {
     return Text(
-      "Name of plant", // replace with actual plant name
-      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+      name,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
     );
   }
 
@@ -110,7 +118,8 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const WateringSchedulePage(),
+                builder: (context) =>
+                    WateringSchedulePage(plantId: widget.plantId),
               ),
             );
           },
@@ -147,7 +156,8 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const FertilizingSchedulePage(),
+                builder: (context) =>
+                    FertilizingSchedulePage(plantId: widget.plantId),
               ),
             );
           },
@@ -183,16 +193,23 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.history),
-          onPressed: () {
-            Navigator.pop(context);
-            
-            
-            // Navigator.push(
-            //     context,
-            //     MaterialPageRoute(
-            //       builder: (context) => const ScanScreen(),
-            //     ));
+          icon: const Icon(Icons.edit),
+          onPressed: () async {
+            final updatedPlant = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditPlantPage(
+                  plantId: widget.plantId,
+                  plant: Plant.fromJson(widget.plantData), // ✅ truyền model
+                ),
+              ),
+            );
+
+            if (updatedPlant != null) {
+              setState(() {
+                widget.plantData.addAll(updatedPlant); // refresh lại giao diện
+              });
+            }
           },
         ),
       ],

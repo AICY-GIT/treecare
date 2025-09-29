@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tree_care/features/repeat.dart';
+import 'package:tree_care/models/repeat_model.dart';
+import 'package:tree_care/services/schedule_service.dart';
 
 class FertilizingSchedulePage extends StatefulWidget {
-  const FertilizingSchedulePage({super.key});
+  final String plantId;
+  const FertilizingSchedulePage({super.key, required this.plantId});
 
   @override
   State<FertilizingSchedulePage> createState() =>
@@ -10,9 +15,43 @@ class FertilizingSchedulePage extends StatefulWidget {
 }
 
 class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
-  final List<DateTime> schedules = [];
-  List<bool> isRepeat = [];
-  List<String> repeatType = [];
+  final _service = ScheduleService();
+  List<Repeat> fertilizingSchedules = [];
+  StreamSubscription<List<Repeat>>? _scheduleSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleSub =
+        _service.getFertilizingSchedules(widget.plantId).listen((data) {
+      if (mounted) {
+        setState(() {
+          fertilizingSchedules = data;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scheduleSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _saveSchedules() async {
+    try {
+      await _service.saveFertilizingSchedules(
+          widget.plantId, fertilizingSchedules);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      debugPrint("Save failed: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to save schedules")),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,20 +69,18 @@ class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
           child: Center(
             child: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 32),
-                  Image.asset(
-                    'assets/icons/logo.png',
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.contain,
-                  ),
+                  // Image.asset(
+                  //   'assets/icons/logo.png',
+                  //   width: 150,
+                  //   height: 150,
+                  // ),
                   const SizedBox(height: 24),
-                  ...schedules.asMap().entries.map((entry) {
+                  ...fertilizingSchedules.asMap().entries.map((entry) {
                     final index = entry.key;
-                    final dt = entry.value;
-                    return _fertilizingScheduleCard(index, dt);
+                    final repeat = entry.value;
+                    return _wateringScheduleCard(index, repeat);
                   }).toList(),
                   const SizedBox(height: 64),
                 ],
@@ -56,12 +93,16 @@ class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
     );
   }
 
-  Container _fertilizingScheduleCard(int index, DateTime dt) {
+  Container _wateringScheduleCard(int index, Repeat repeat) {
     Future<void> _editSchedule() async {
-      final newDateTime = await _pickDateTime(schedules[index]);
+      final newDateTime = await _pickDateTime(repeat.timestamp);
       if (newDateTime != null) {
         setState(() {
-          schedules[index] = newDateTime;
+          fertilizingSchedules[index] = Repeat(
+            timestamp: newDateTime,
+            repeatType: repeat.repeatType,
+            daysOfWeek: repeat.daysOfWeek,
+          );
         });
       }
     }
@@ -72,7 +113,7 @@ class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: <BoxShadow>[
+        boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 4,
@@ -81,7 +122,6 @@ class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -100,45 +140,35 @@ class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
             ],
           ),
           const SizedBox(height: 8),
-          _dayTimeView(dt),
+          GestureDetector(
+              onTap: _editSchedule, child: _dayTimeView(repeat.timestamp)),
           const SizedBox(height: 8),
-          _repeatSwitch(index),
-          _editRepeatSchedule(index),
+          _editRepeatSchedule(index, repeat),
         ],
       ),
     );
   }
 
-  ListTile _editRepeatSchedule(int index) {
+  ListTile _editRepeatSchedule(int index, Repeat repeat) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(repeatType[index]),
+      title: Text(repeat.repeatType),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: () async {
         final result = await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => RepeatPage(initType: repeatType[index]),
+            builder: (_) => RepeatPage(
+              initRepeat: repeat,
+              initType: '',
+            ),
           ),
         );
-        if (result != null && result is String) {
+        if (result != null && result is Repeat) {
           setState(() {
-            repeatType[index] = result;
+            fertilizingSchedules[index] = result;
           });
         }
-      },
-    );
-  }
-
-  SwitchListTile _repeatSwitch(int index) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: const Text("Repeat"),
-      value: isRepeat[index],
-      onChanged: (val) {
-        setState(() {
-          isRepeat[index] = val;
-        });
       },
     );
   }
@@ -148,9 +178,7 @@ class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
       icon: const Icon(Icons.delete),
       onPressed: () {
         setState(() {
-          schedules.removeAt(index);
-          isRepeat.removeAt(index);
-          repeatType.removeAt(index);
+          fertilizingSchedules.removeAt(index);
         });
       },
     );
@@ -162,9 +190,13 @@ class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
         final newDateTime = await _pickDateTime(DateTime.now());
         if (newDateTime != null) {
           setState(() {
-            schedules.add(newDateTime);
-            isRepeat.add(true);
-            repeatType.add("Once");
+            fertilizingSchedules.add(
+              Repeat(
+                timestamp: newDateTime,
+                repeatType: "Once",
+                daysOfWeek: [],
+              ),
+            );
           });
         }
       },
@@ -194,28 +226,9 @@ class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
       ),
       title: const Text('Fertilizing Schedule'),
       centerTitle: true,
-      titleTextStyle: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.black,
-      ),
       actions: [
         TextButton(
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                title: const Text("Success"),
-                content: const Text("Schedules saved!"),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text("OK"),
-                  ),
-                ],
-              ),
-            );
-          },
+          onPressed: _saveSchedules,
           child: const Text(
             "Save",
             style: TextStyle(

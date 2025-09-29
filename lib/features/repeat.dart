@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:tree_care/models/repeat_model.dart';
 
 class RepeatPage extends StatefulWidget {
-  const RepeatPage({super.key, required String initType});
+  final Repeat initRepeat;
+  const RepeatPage(
+      {super.key, required this.initRepeat, required String initType});
 
   @override
   State<RepeatPage> createState() => _RepeatPageState();
 }
 
 class _RepeatPageState extends State<RepeatPage> {
-  String repeatType = "Once";
-  final List<String> days = [
+  late String repeatType;
+
+  static const List<String> weekDays = [
     "Monday",
     "Tuesday",
     "Wednesday",
@@ -18,22 +22,29 @@ class _RepeatPageState extends State<RepeatPage> {
     "Saturday",
     "Sunday"
   ];
-  final Set<String> selectedDays = {};
+
+  late Set<String> selectedDays;
+
+  @override
+  void initState() {
+    super.initState();
+    repeatType = widget.initRepeat.repeatType;
+    selectedDays = widget.initRepeat.daysOfWeek.toSet();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _appBar(context),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 16),
-            _selectRepeat(),
+            _selectRepeatCard(),
             const SizedBox(height: 16),
             if (repeatType == "Customize") _customizeSelect(),
+            const Spacer(),
             _saveButton(context),
-            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -51,19 +62,56 @@ class _RepeatPageState extends State<RepeatPage> {
     );
   }
 
-  Expanded _customizeSelect() {
-    return Expanded(
-      child: ListView(
-        children: days.map((d) {
+  /// Card chứa dropdown chọn loại repeat
+  Widget _selectRepeatCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            const SizedBox(width: 16),
+            Expanded(
+              child: DropdownButton<String>(
+                value: repeatType,
+                isExpanded: true,
+                underline: const SizedBox(),
+                items: const [
+                  DropdownMenuItem(value: "Once", child: Text("Once")),
+                  DropdownMenuItem(value: "Daily", child: Text("Daily")),
+                  DropdownMenuItem(
+                      value: "Customize", child: Text("Customize")),
+                ],
+                onChanged: (val) {
+                  setState(() {
+                    repeatType = val!;
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Checkbox select customize
+  Widget _customizeSelect() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        children: weekDays.map((day) {
           return CheckboxListTile(
-            title: Text(d),
-            value: selectedDays.contains(d),
+            title: Text(day),
+            value: selectedDays.contains(day),
             onChanged: (val) {
               setState(() {
                 if (val == true) {
-                  selectedDays.add(d);
+                  selectedDays.add(day);
                 } else {
-                  selectedDays.remove(d);
+                  selectedDays.remove(day);
                 }
               });
             },
@@ -73,28 +121,29 @@ class _RepeatPageState extends State<RepeatPage> {
     );
   }
 
-  ElevatedButton _saveButton(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.pop(context, repeatType);
-      },
-      child: const Text("Save"),
-    );
-  }
+  Widget _saveButton(BuildContext context) {
+    return SizedBox(
+      child: ElevatedButton.icon(
+        label: const Text("Save"),
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        onPressed: () {
+          final sortedSelectedDays =
+              weekDays.where((day) => selectedDays.contains(day)).toList();
 
-  DropdownButton<String> _selectRepeat() {
-    return DropdownButton<String>(
-      value: repeatType,
-      items: const [
-        DropdownMenuItem(value: "Once", child: Text("Once")),
-        DropdownMenuItem(value: "Daily", child: Text("Daily")),
-        DropdownMenuItem(value: "Customize", child: Text("Customize")),
-      ],
-      onChanged: (val) {
-        setState(() {
-          repeatType = val!;
-        });
-      },
+          Navigator.pop(
+            context,
+            Repeat(
+              timestamp: widget.initRepeat.timestamp,
+              repeatType: repeatType,
+              daysOfWeek: sortedSelectedDays,
+            ),
+          );
+        },
+      ),
     );
   }
 }
