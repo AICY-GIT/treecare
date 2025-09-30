@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tree_care/features/add_plant.dart';
 import 'package:tree_care/features/plant_detail.dart';
 import 'package:tree_care/services/plant_services.dart';
+import 'package:tree_care/services/shared_pref_plants.dart';
 import 'package:tree_care/utils/image_convert.dart';
 
 class MainHome extends StatefulWidget {
@@ -15,6 +16,12 @@ class _MainHomeState extends State<MainHome> {
   final PlantService _plantService = PlantService();
 
   @override
+  void initState() {
+    super.initState();
+    _refreshPlants();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -25,26 +32,21 @@ class _MainHomeState extends State<MainHome> {
           ),
         ),
         child: SafeArea(
-          child: StreamBuilder<Map<String, dynamic>>(
-            stream: _plantService.getPlants(),
+          child: FutureBuilder<Map<String, dynamic>>(
+            future: PlantSharedPref.loadPlantsFromSharedPreferences(),
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
+              if (!snapshot.hasData)
                 return const Center(child: CircularProgressIndicator());
-              }
-
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text("No plants found."));
-              }
-
               final plants = snapshot.data!;
+              if (plants.isEmpty)
+                return const Center(child: Text("No plants found."));
               final plantKeys = plants.keys.toList();
 
               return ListView.separated(
                 separatorBuilder: (context, index) =>
                     const SizedBox(height: 20),
                 itemCount: plants.length,
-                scrollDirection: Axis.vertical,
-                itemBuilder: (BuildContext context, int index) {
+                itemBuilder: (context, index) {
                   final key = plantKeys[index];
                   final plant = Map<String, dynamic>.from(plants[key]);
 
@@ -57,11 +59,8 @@ class _MainHomeState extends State<MainHome> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PlantDetailPage(
-                              plantId: key, // plantId in Realtime Database
-                              plantData:
-                                  plant, // Map<String, dynamic> plant data
-                            ),
+                            builder: (_) =>
+                                PlantDetailPage(plantId: key, plantData: plant),
                           ),
                         );
                       },
@@ -125,6 +124,7 @@ class _MainHomeState extends State<MainHome> {
         TextButton(
           onPressed: () {
             _plantService.deletePlant(key);
+            _refreshPlants();
             Navigator.pop(context);
           },
           child: const Text("Delete"),
@@ -135,13 +135,14 @@ class _MainHomeState extends State<MainHome> {
 
   FloatingActionButton _addButton(BuildContext context) {
     return FloatingActionButton(
-      onPressed: () {
+      onPressed: () async {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => const AddPlantPage(),
           ),
         );
+        await _refreshPlants();
       },
       child: const Icon(Icons.add),
     );
@@ -165,5 +166,12 @@ class _MainHomeState extends State<MainHome> {
       name,
       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
     );
+  }
+
+  Future<void> _refreshPlants() async {
+    // Fetch dữ liệu mới từ Firebase và lưu SharedPreferences
+    await PlantSharedPref.fetchAndSavePlantsToSharedPreferences(_plantService);
+    // Refresh UI bằng setState
+    setState(() {});
   }
 }

@@ -3,6 +3,8 @@ import 'package:tree_care/features/edit_plant.dart';
 import 'package:tree_care/features/fertilizing_schedule.dart';
 import 'package:tree_care/features/watering_schedule.dart';
 import 'package:tree_care/models/plant_model.dart';
+import 'package:tree_care/services/plant_services.dart';
+import 'package:tree_care/services/shared_pref_plants.dart';
 import 'package:tree_care/utils/image_convert.dart';
 
 class PlantDetailPage extends StatefulWidget {
@@ -20,6 +22,22 @@ class PlantDetailPage extends StatefulWidget {
 }
 
 class _PlantDetailPageState extends State<PlantDetailPage> {
+  @override
+  void initState() {
+    super.initState();
+    _loadPlantFromSF();
+  }
+
+  Future<void> _loadPlantFromSF() async {
+    final data = await PlantSharedPref.loadPlantById(widget.plantId);
+    if (data != null && mounted) {
+      setState(() {
+        widget.plantData.clear();
+        widget.plantData.addAll(data);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = widget.plantData;
@@ -200,14 +218,16 @@ class _PlantDetailPageState extends State<PlantDetailPage> {
               MaterialPageRoute(
                 builder: (context) => EditPlantPage(
                   plantId: widget.plantId,
-                  plant: Plant.fromJson(widget.plantData), // ✅ truyền model
+                  plant: Plant.fromJson(widget.plantData),
                 ),
               ),
             );
 
+            await _loadPlantFromSF();
+
             if (updatedPlant != null) {
               setState(() {
-                widget.plantData.addAll(updatedPlant); // refresh lại giao diện
+                widget.plantData.addAll(updatedPlant);
               });
             }
           },

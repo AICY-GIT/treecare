@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tree_care/models/plant_model.dart';
 import 'package:tree_care/services/plant_services.dart';
+import 'package:tree_care/services/shared_pref_plants.dart';
 import 'package:tree_care/widgets/plant_form.dart';
 
 class AddPlantPage extends StatefulWidget {
@@ -18,6 +19,10 @@ class _AddPlantPageState extends State<AddPlantPage> {
 
     try {
       await PlantService().addPlant(newPlant);
+
+      await PlantSharedPref.fetchAndSavePlantsToSharedPreferences(
+          PlantService());
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(

@@ -42,4 +42,21 @@ class PlantService {
 
     await _db.child("users/$_uid/plants/$plantId").update(updates);
   }
+
+  /// Lấy cây 1 lần, dùng để load vào cache SharedPreferences
+  Future<Map<String, Plant>> getPlantsOnce() async {
+    if (_uid == null) return {};
+
+    final snapshot = await _db.child("users/$_uid/plants").get();
+    final data = snapshot.value as Map<dynamic, dynamic>?;
+
+    if (data == null) return {};
+
+    final Map<String, Plant> plantsMap = {};
+    data.forEach((key, value) {
+      plantsMap[key] = Plant.fromJson(Map<String, dynamic>.from(value));
+    });
+
+    return plantsMap;
+  }
 }
