@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tree_care/features/repeat.dart';
 import 'package:tree_care/models/repeat_model.dart';
-import 'package:tree_care/services/schedule_service.dart';
+import 'package:tree_care/services/firebase/schedule_service.dart';
 
 class FertilizingSchedulePage extends StatefulWidget {
   final String plantId;
@@ -17,24 +17,24 @@ class FertilizingSchedulePage extends StatefulWidget {
 class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
   final _service = ScheduleService();
   List<Repeat> fertilizingSchedules = [];
-  StreamSubscription<List<Repeat>>? _scheduleSub;
 
   @override
   void initState() {
     super.initState();
-    _scheduleSub =
-        _service.getFertilizingSchedules(widget.plantId).listen((data) {
-      if (mounted) {
-        setState(() {
-          fertilizingSchedules = data;
-        });
-      }
-    });
+    _loadSchedules();
+  }
+
+  Future<void> _loadSchedules() async {
+    final data = await _service.getFertilizingSchedules(widget.plantId);
+    if (mounted) {
+      setState(() {
+        fertilizingSchedules = data;
+      });
+    }
   }
 
   @override
   void dispose() {
-    _scheduleSub?.cancel();
     super.dispose();
   }
 
@@ -189,6 +189,15 @@ class _FertilizingSchedulePageState extends State<FertilizingSchedulePage> {
       onPressed: () async {
         final newDateTime = await _pickDateTime(DateTime.now());
         if (newDateTime != null) {
+          if (newDateTime.isBefore(DateTime.now())) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("You selected a past time."),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
           setState(() {
             fertilizingSchedules.add(
               Repeat(

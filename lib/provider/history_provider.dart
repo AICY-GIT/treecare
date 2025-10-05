@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:tree_care/models/history_model.dart';
-import 'package:tree_care/services/firebase_db_service.dart';
+import 'package:tree_care/services/firebase/history_service.dart';
 
 class HistoryProvider extends ChangeNotifier {
   final FirebaseDbService _dbService = FirebaseDbService();

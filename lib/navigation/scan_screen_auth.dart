@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:tree_care/authentication/login_screen.dart';
 import 'package:tree_care/models/plant_net_model.dart';
 import 'package:tree_care/scan/result_botton_sheet.dart';
-import 'package:tree_care/services/firebase_db_service.dart';
+import 'package:tree_care/services/firebase/history_service.dart';
 import 'package:tree_care/services/plant_net_service.dart';
 import 'package:tree_care/utils/dialogs.dart';
 
@@ -22,7 +22,6 @@ class _ScanScreenAuthState extends State<ScanScreenAuth> {
 
   final PlantNetService _plantNetService = PlantNetService();
   final FirebaseDbService _dbService = FirebaseDbService();
-
 
   Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(source: source);

@@ -17,17 +17,17 @@ class PlantService {
   }
 
   /// get plants
-  Stream<Map<String, dynamic>> getPlants() {
-    if (_uid == null) return const Stream.empty();
+  // Stream<Map<String, dynamic>> getPlants() {
+  //   if (_uid == null) return const Stream.empty();
 
-    return _db.child("users/$_uid/plants").onValue.map((event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+  //   return _db.child("users/$_uid/plants").onValue.map((event) {
+  //     final data = event.snapshot.value as Map<dynamic, dynamic>?;
 
-      if (data == null) return {};
+  //     if (data == null) return {};
 
-      return Map<String, dynamic>.from(data);
-    });
-  }
+  //     return Map<String, dynamic>.from(data);
+  //   });
+  // }
 
   /// delete plant
   Future<void> deletePlant(String plantId) async {
@@ -43,8 +43,8 @@ class PlantService {
     await _db.child("users/$_uid/plants/$plantId").update(updates);
   }
 
-  /// Lấy cây 1 lần, dùng để load vào cache SharedPreferences
-  Future<Map<String, Plant>> getPlantsOnce() async {
+  /// Get plants for SharedPreferences
+  Future<Map<String, Plant>> getPlantsForSharedPreference() async {
     if (_uid == null) return {};
 
     final snapshot = await _db.child("users/$_uid/plants").get();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tree_care/authentication/login_screen.dart';
-import 'package:tree_care/services/firebase_auth_service.dart';
+import 'package:tree_care/services/firebase/auth_service.dart';
 import 'package:tree_care/utils/validators.dart';
 import 'package:tree_care/widgets/custom_input_box.dart';
 

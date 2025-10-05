@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tree_care/features/add_plant.dart';
 import 'package:tree_care/features/plant_detail.dart';
-import 'package:tree_care/services/plant_services.dart';
-import 'package:tree_care/services/shared_pref_plants.dart';
+import 'package:tree_care/services/firebase/plant_services.dart';
+import 'package:tree_care/services/shared_preferences_plants.dart';
 import 'package:tree_care/utils/image_convert.dart';
 
 class MainHome extends StatefulWidget {
@@ -64,12 +64,6 @@ class _MainHomeState extends State<MainHome> {
                           ),
                         );
                       },
-                      onLongPress: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => _deletePlant(context, key),
-                        );
-                      },
                       child: Container(
                         height: 120,
                         decoration: BoxDecoration(
@@ -87,16 +81,35 @@ class _MainHomeState extends State<MainHome> {
                         child: Row(
                           children: [
                             ImageUtils.plantImage(plant['base64Image'],
-                                size: 100),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _plantName(
-                                    plant['plantName'] ?? 'Plant Name ?'),
-                              ],
+                                size: 100, isCircle: true),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: SafeArea(
+                                child: Text(
+                                  plant['plantName'] ?? 'Plant Name ?',
+                                  textAlign: TextAlign.start,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
                             ),
                             const Spacer(),
-                            _favoriteButton(key, plant['isFavorite'] ?? false),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                _deletePlant(context, key),
+                                SizedBox(height: 8),
+                                _favoriteButton(
+                                    key, plant['isFavorite'] ?? false),
+                              ],
+                            ),
+                            const SizedBox(width: 10),
                           ],
                         ),
                       ),
@@ -112,24 +125,36 @@ class _MainHomeState extends State<MainHome> {
     );
   }
 
-  AlertDialog _deletePlant(BuildContext context, String key) {
-    return AlertDialog(
-      title: const Text("Delete Plant"),
-      content: const Text("Do you want to delete this plant?"),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel"),
-        ),
-        TextButton(
-          onPressed: () {
-            _plantService.deletePlant(key);
-            _refreshPlants();
-            Navigator.pop(context);
+  IconButton _deletePlant(BuildContext context, String key) {
+    return IconButton(
+      iconSize: 28,
+      padding: EdgeInsets.zero,
+      icon: const Icon(Icons.delete, color: Colors.black54),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text("Delete Plant"),
+              content: const Text("Do you want to delete this plant?"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _plantService.deletePlant(key);
+                    _refreshPlants();
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Delete"),
+                ),
+              ],
+            );
           },
-          child: const Text("Delete"),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -150,13 +175,15 @@ class _MainHomeState extends State<MainHome> {
 
   IconButton _favoriteButton(String plantId, bool isFav) {
     return IconButton(
-      iconSize: 32,
+      iconSize: 28,
+      padding: EdgeInsets.zero,
       icon: Icon(
         isFav ? Icons.favorite : Icons.favorite_border,
         color: isFav ? Colors.red : null,
       ),
-      onPressed: () {
-        _plantService.updatePlant(plantId, {'isFavorite': !isFav});
+      onPressed: () async {
+        await _plantService.updatePlant(plantId, {'isFavorite': !isFav});
+        await _refreshPlants();
       },
     );
   }

@@ -131,6 +131,15 @@ class _RepeatPageState extends State<RepeatPage> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         onPressed: () {
+          if (repeatType == "Customize" && selectedDays.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text("Please select at least one day."),
+                  duration: Duration(seconds: 2)),
+            );
+            return;
+          }
+
           final sortedSelectedDays =
               weekDays.where((day) => selectedDays.contains(day)).toList();
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tree_care/models/plant_model.dart';
-import 'package:tree_care/services/plant_services.dart';
-import 'package:tree_care/services/shared_pref_plants.dart';
+import 'package:tree_care/services/firebase/plant_services.dart';
+import 'package:tree_care/services/shared_preferences_plants.dart';
 import 'package:tree_care/widgets/plant_form.dart';
 
 class EditPlantPage extends StatefulWidget {
