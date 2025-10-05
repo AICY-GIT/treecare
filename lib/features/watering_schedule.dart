@@ -1,17 +1,55 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tree_care/features/repeat.dart';
+import 'package:tree_care/models/repeat_model.dart';
+import 'package:tree_care/services/firebase/schedule_service.dart';
 
 class WateringSchedulePage extends StatefulWidget {
-  const WateringSchedulePage({super.key});
+  final String plantId;
+  const WateringSchedulePage({super.key, required this.plantId});
 
   @override
   State<WateringSchedulePage> createState() => _WateringSchedulePageState();
 }
 
 class _WateringSchedulePageState extends State<WateringSchedulePage> {
-  final List<DateTime> schedules = [];
-  List<bool> isRepeat = [];
-  List<String> repeatType = [];
+  final _service = ScheduleService();
+  List<Repeat> wateringSchedules = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSchedules();
+  }
+
+  Future<void> _loadSchedules() async {
+    final data = await _service.getWateringSchedules(widget.plantId);
+    if (mounted) {
+      setState(() {
+        wateringSchedules = data;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  Future<void> _saveSchedules() async {
+    try {
+      await _service.saveWateringSchedules(widget.plantId, wateringSchedules);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      debugPrint("Save failed: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to save schedules")),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,20 +67,18 @@ class _WateringSchedulePageState extends State<WateringSchedulePage> {
           child: Center(
             child: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 32),
-                  Image.asset(
-                    'assets/icons/logo.png',
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.contain,
-                  ),
+                  // Image.asset(
+                  //   'assets/icons/logo.png',
+                  //   width: 150,
+                  //   height: 150,
+                  // ),
                   const SizedBox(height: 24),
-                  ...schedules.asMap().entries.map((entry) {
+                  ...wateringSchedules.asMap().entries.map((entry) {
                     final index = entry.key;
-                    final dt = entry.value;
-                    return _wateringScheduleCard(index, dt);
+                    final repeat = entry.value;
+                    return _wateringScheduleCard(index, repeat);
                   }).toList(),
                   const SizedBox(height: 64),
                 ],
@@ -55,12 +91,16 @@ class _WateringSchedulePageState extends State<WateringSchedulePage> {
     );
   }
 
-  Container _wateringScheduleCard(int index, DateTime dt) {
+  Container _wateringScheduleCard(int index, Repeat repeat) {
     Future<void> _editSchedule() async {
-      final newDateTime = await _pickDateTime(schedules[index]);
+      final newDateTime = await _pickDateTime(repeat.timestamp);
       if (newDateTime != null) {
         setState(() {
-          schedules[index] = newDateTime;
+          wateringSchedules[index] = Repeat(
+            timestamp: newDateTime,
+            repeatType: repeat.repeatType,
+            daysOfWeek: repeat.daysOfWeek,
+          );
         });
       }
     }
@@ -71,7 +111,7 @@ class _WateringSchedulePageState extends State<WateringSchedulePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: <BoxShadow>[
+        boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 4,
@@ -80,7 +120,6 @@ class _WateringSchedulePageState extends State<WateringSchedulePage> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -99,45 +138,35 @@ class _WateringSchedulePageState extends State<WateringSchedulePage> {
             ],
           ),
           const SizedBox(height: 8),
-          _dayTimeView(dt),
+          GestureDetector(
+              onTap: _editSchedule, child: _dayTimeView(repeat.timestamp)),
           const SizedBox(height: 8),
-          _repeatSwitch(index),
-          _editRepeatSchedule(index),
+          _editRepeatSchedule(index, repeat),
         ],
       ),
     );
   }
 
-  ListTile _editRepeatSchedule(int index) {
+  ListTile _editRepeatSchedule(int index, Repeat repeat) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(repeatType[index]),
+      title: Text(repeat.repeatType),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: () async {
         final result = await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => RepeatPage(initType: repeatType[index]),
+            builder: (_) => RepeatPage(
+              initRepeat: repeat,
+              initType: '',
+            ),
           ),
         );
-        if (result != null && result is String) {
+        if (result != null && result is Repeat) {
           setState(() {
-            repeatType[index] = result;
+            wateringSchedules[index] = result;
           });
         }
-      },
-    );
-  }
-
-  SwitchListTile _repeatSwitch(int index) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: const Text("Repeat"),
-      value: isRepeat[index],
-      onChanged: (val) {
-        setState(() {
-          isRepeat[index] = val;
-        });
       },
     );
   }
@@ -147,9 +176,7 @@ class _WateringSchedulePageState extends State<WateringSchedulePage> {
       icon: const Icon(Icons.delete),
       onPressed: () {
         setState(() {
-          schedules.removeAt(index);
-          isRepeat.removeAt(index);
-          repeatType.removeAt(index);
+          wateringSchedules.removeAt(index);
         });
       },
     );
@@ -160,10 +187,23 @@ class _WateringSchedulePageState extends State<WateringSchedulePage> {
       onPressed: () async {
         final newDateTime = await _pickDateTime(DateTime.now());
         if (newDateTime != null) {
+          if (newDateTime.isBefore(DateTime.now())) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("You selected a past time."),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
           setState(() {
-            schedules.add(newDateTime);
-            isRepeat.add(true);
-            repeatType.add("Once");
+            wateringSchedules.add(
+              Repeat(
+                timestamp: newDateTime,
+                repeatType: 'Once',
+                daysOfWeek: [],
+              ),
+            );
           });
         }
       },
@@ -193,28 +233,9 @@ class _WateringSchedulePageState extends State<WateringSchedulePage> {
       ),
       title: const Text('Watering Schedule'),
       centerTitle: true,
-      titleTextStyle: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.black,
-      ),
       actions: [
         TextButton(
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) => AlertDialog(
-                title: const Text("Success"),
-                content: const Text("Schedules saved!"),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text("OK"),
-                  ),
-                ],
-              ),
-            );
-          },
+          onPressed: _saveSchedules,
           child: const Text(
             "Save",
             style: TextStyle(
